@@ -298,7 +298,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                     <div v-for="pkg in packages" :key="pkg.id" class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition flex flex-col">
                         <div class="h-48 bg-slate-200 relative">
-                            <img :src="pkg.image" :alt="pkg.name" class="w-full h-full object-cover" @error="onImgError">
+                            <img :src="pkg.image || 'https://placehold.co/600x400/064e3b/ffffff?text=Pakej+Umrah'" :alt="pkg.name" class="w-full h-full object-cover" @error="onImgError">
                             <div class="absolute top-3 right-3 bg-emerald-900/90 text-gold-400 text-xs font-bold px-3 py-1 rounded-full">
                                 {{ pkg.duration }}
                             </div>
@@ -1232,6 +1232,39 @@
         </div>
     </div>
 
+    <!-- MODAL: PACKAGE -->
+    <div v-if="pkgModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 space-y-3">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="text-lg font-bold text-emerald-900">{{ pkgForm.id === null ? 'Tambah Pakej' : 'Edit Pakej' }}</h3>
+                <button @click="pkgModal = false" class="text-slate-400 text-2xl leading-none">&times;</button>
+            </div>
+            <form @submit.prevent="savePackage" class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Gambar Pakej</label>
+                    <div class="h-36 rounded-lg bg-slate-100 overflow-hidden flex items-center justify-center border">
+                        <img v-if="pkgForm.image" :src="pkgForm.image" class="w-full h-full object-cover">
+                        <span v-else class="text-slate-400">Tiada gambar</span>
+                    </div>
+                    <div class="flex items-center gap-2 mt-2">
+                        <input type="file" accept="image/*" @change="onPkgImage" class="text-[11px] flex-1">
+                        <button v-if="pkgForm.image" type="button" @click="pkgForm.image = ''" class="text-red-600 font-semibold">Buang</button>
+                    </div>
+                    <p class="text-[10px] text-slate-400 mt-1">Gambar mendatar (landscape) paling sesuai. Saiz dikecilkan secara automatik.</p>
+                </div>
+                <div><label class="block font-semibold text-slate-700 mb-1">Nama Pakej</label><input v-model="pkgForm.name" required class="w-full p-2.5 border rounded-lg"></div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div><label class="block font-semibold text-slate-700 mb-1">Harga (RM)</label><input type="number" min="1" v-model="pkgForm.price" required class="w-full p-2.5 border rounded-lg"></div>
+                    <div><label class="block font-semibold text-slate-700 mb-1">Tempoh</label><input v-model="pkgForm.duration" placeholder="12 Hari 10 Malam" class="w-full p-2.5 border rounded-lg"></div>
+                </div>
+                <div><label class="block font-semibold text-slate-700 mb-1">Hotel Makkah</label><input v-model="pkgForm.hotel_makkah" placeholder="Nama hotel (jarak ke Masjidil Haram)" class="w-full p-2.5 border rounded-lg"></div>
+                <div><label class="block font-semibold text-slate-700 mb-1">Hotel Madinah</label><input v-model="pkgForm.hotel_madinah" placeholder="Nama hotel (jarak ke Masjid Nabawi)" class="w-full p-2.5 border rounded-lg"></div>
+                <div><label class="block font-semibold text-slate-700 mb-1">Keterangan</label><textarea v-model="pkgForm.description" rows="3" class="w-full p-2.5 border rounded-lg"></textarea></div>
+                <button type="submit" class="w-full bg-emerald-800 hover:bg-emerald-900 text-white font-bold py-2.5 rounded-xl text-sm">Simpan Pakej</button>
+            </form>
+        </div>
+    </div>
+
     <!-- MODAL: PROFILE -->
     <div v-if="showProfileModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-3">
@@ -1459,6 +1492,8 @@ createApp({
             demoMode: DEMO_MODE,
             busy: false,
             legalDoc: null,
+            pkgModal: false,
+            pkgForm: {},
             unsubs: [],
 
             // Auth State
@@ -1987,17 +2022,42 @@ createApp({
         },
 
         openAddPackageModal() {
-            this.editPackage({ id: null, name: '', price: '', description: '', duration: '12 Hari 10 Malam', hotel_makkah: '-', hotel_madinah: '-', image: 'https://placehold.co/600x400/064e3b/ffffff?text=Pakej+Umrah' });
+            this.pkgForm = { id: null, name: '', price: '', duration: '12 Hari 10 Malam', hotel_makkah: '', hotel_madinah: '', description: '', image: '' };
+            this.pkgModal = true;
         },
-        async editPackage(pkg) {
-            const name = prompt('Nama pakej:', pkg.name);
-            if (name === null || !name.trim()) return;
-            const price = Number(prompt('Harga (RM):', pkg.price));
-            if (!(price > 0)) { alert('Harga tidak sah.'); return; }
-            const description = prompt('Keterangan:', pkg.description);
-            if (description === null) return;
-            const id = pkg.id === null ? String(Date.now()) : String(pkg.id);
-            try { await setDoc(doc(db, 'packages', id), { ...pkg, id, name: name.trim(), price, description }); } catch (e) { this.fail(e); }
+        editPackage(pkg) {
+            this.pkgForm = { id: pkg.id, name: pkg.name || '', price: pkg.price || '', duration: pkg.duration || '', hotel_makkah: pkg.hotel_makkah === '-' ? '' : (pkg.hotel_makkah || ''), hotel_madinah: pkg.hotel_madinah === '-' ? '' : (pkg.hotel_madinah || ''), description: pkg.description || '', image: pkg.image || '' };
+            this.pkgModal = true;
+        },
+        onPkgImage(e) {
+            const file = e.target.files[0];
+            e.target.value = '';
+            if (!file) return;
+            if (!file.type.startsWith('image/')) { alert('Sila pilih fail gambar (JPG atau PNG).'); return; }
+            const img = new Image();
+            const url = URL.createObjectURL(file);
+            img.onload = () => {
+                const w = Math.min(900, img.width), h = Math.round(img.height * w / img.width);
+                const cv = document.createElement('canvas');
+                cv.width = w; cv.height = h;
+                const ctx = cv.getContext('2d');
+                ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h);
+                ctx.drawImage(img, 0, 0, w, h);
+                let q = 0.8, data = cv.toDataURL('image/jpeg', q);
+                while (data.length > 600000 && q > 0.3) { q -= 0.1; data = cv.toDataURL('image/jpeg', q); }
+                URL.revokeObjectURL(url);
+                if (data.length > 900000) { alert('Gambar terlalu besar. Sila pilih gambar lain.'); return; }
+                this.pkgForm.image = data;
+            };
+            img.onerror = () => alert('Gambar tidak dapat dibaca. Cuba fail lain.');
+            img.src = url;
+        },
+        async savePackage() {
+            const f = this.pkgForm;
+            if (!f.name.trim() || !(Number(f.price) > 0)) { alert('Nama dan harga (lebih daripada 0) diperlukan.'); return; }
+            const id = f.id === null ? String(Date.now()) : String(f.id);
+            const data = { id, name: f.name.trim(), price: Number(f.price), duration: (f.duration || '').trim(), hotel_makkah: (f.hotel_makkah || '').trim() || '-', hotel_madinah: (f.hotel_madinah || '').trim() || '-', description: (f.description || '').trim(), image: f.image || '' };
+            try { await setDoc(doc(db, 'packages', id), data); this.pkgModal = false; } catch (e) { this.fail(e); }
         },
         deletePackage(id) {
             if (this.allUsers.some(u => u.target_package_id === id)) { alert('Pakej ini masih dipilih oleh pengguna. Tidak boleh dipadam.'); return; }
