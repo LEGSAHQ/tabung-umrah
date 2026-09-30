@@ -160,7 +160,7 @@
                         <div class="pt-6 flex items-center justify-center lg:justify-start space-x-6 text-emerald-200 text-xs">
                             <span class="flex items-center"><i class="fa-solid fa-check-circle text-gold-400 mr-2"></i> PERCUMA Digunakan</span>
                             <span class="flex items-center"><i class="fa-solid fa-check-circle text-gold-400 mr-2"></i> Rekod Automatik</span>
-                            <span class="flex items-center"><i class="fa-solid fa-check-circle text-gold-400 mr-2"></i> Bantuan Ejen Bertauliah</span>
+                            <span class="flex items-center"><i class="fa-solid fa-check-circle text-gold-400 mr-2"></i> Bantuan Ejen Umrah</span>
                         </div>
                     </div>
                     
@@ -334,9 +334,9 @@
                 </div>
                 <div class="text-xs space-y-2">
                     <p class="font-bold text-white text-sm mb-2">Hubungi Kami</p>
-                    <p><i class="fa-solid fa-envelope mr-2 text-gold-400"></i> sokongan@tabungumrah.app</p>
-                    <p><i class="fa-solid fa-phone mr-2 text-gold-400"></i> +60 3-8000 1234</p>
-                    <p><i class="fa-solid fa-location-dot mr-2 text-gold-400"></i> Bandar Baru Bangi, Selangor</p>
+                    <p><i class="fa-solid fa-envelope mr-2 text-gold-400"></i> legsaempireofficial@gmail.com</p>
+                    <p><i class="fa-solid fa-phone mr-2 text-gold-400"></i> <a href="https://wa.me/60173311580" target="_blank" rel="noopener" class="hover:underline">017-331 1580</a></p>
+                    <p><i class="fa-solid fa-location-dot mr-2 text-gold-400"></i> 19463A Jln Cempaka Biru, Kg Dato Abu Bakar Baginda, 43000 Kajang, Selangor</p>
                 </div>
                 <div class="text-xs">
                     <p class="font-bold text-white text-sm mb-2">Notis Keselamatan</p>
@@ -346,7 +346,11 @@
                 </div>
             </div>
             <div class="max-w-7xl mx-auto px-4 text-center text-xs text-emerald-400/60 mt-8 pt-6 border-t border-emerald-900">
-                &copy; 2026 Tabung Umrah System. Hak Cipta Terpelihara.
+                &copy; 2026 LEGSA EMPIRE ENTERPRISE. Hak Cipta Terpelihara.
+                <span class="mx-2">|</span>
+                <button type="button" @click="legalDoc = 'terms'" class="hover:underline">Terma &amp; Syarat</button>
+                <span class="mx-2">|</span>
+                <button type="button" @click="legalDoc = 'privacy'" class="hover:underline">Polisi Privasi</button>
             </div>
         </footer>
     </div>
@@ -785,7 +789,7 @@
                 <div class="flex items-center justify-between text-xs">
                     <div>
                         <p class="font-bold text-white">Ejen Travel Admin</p>
-                        <p class="text-[10px] text-emerald-400">admin@tabungumrah.app</p>
+                        <p class="text-[10px] text-emerald-400">legsaempireofficial@gmail.com</p>
                     </div>
                     <button @click="logout" class="text-emerald-400 hover:text-white" title="Keluar">
                         <i class="fa-solid fa-right-from-bracket"></i>
@@ -1183,7 +1187,7 @@
                 <div class="pt-2">
                     <label class="flex items-center space-x-2">
                         <input type="checkbox" required class="rounded text-emerald-600">
-                        <span class="text-[11px] text-slate-600">Saya bersetuju dengan Terma & Syarat serta Polisi Privasi, dan membenarkan data saya (nama, telefon, jumlah simpanan) dilihat oleh ejen untuk tujuan follow-up mengikut PDPA 2010.</span>
+                        <span class="text-[11px] text-slate-600">Saya bersetuju dengan <button type="button" @click="legalDoc = 'terms'" class="underline text-emerald-700">Terma &amp; Syarat</button> serta <button type="button" @click="legalDoc = 'privacy'" class="underline text-emerald-700">Polisi Privasi</button>, dan membenarkan data saya (nama, telefon, jumlah simpanan) dilihat oleh ejen untuk tujuan follow-up mengikut PDPA 2010.</span>
                     </label>
                 </div>
 
@@ -1191,6 +1195,40 @@
                     Daftar & Mula Menabung
                 </button>
             </form>
+        </div>
+    </div>
+
+    <!-- MODAL: LEGAL -->
+    <div v-if="legalDoc" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] flex flex-col">
+            <div class="flex justify-between items-center p-5 border-b">
+                <h3 class="text-lg font-bold text-emerald-900">{{ legalDoc === 'terms' ? 'Terma & Syarat' : 'Polisi Privasi' }}</h3>
+                <button @click="legalDoc = null" class="text-slate-400 text-2xl leading-none">&times;</button>
+            </div>
+            <div class="p-5 overflow-y-auto text-xs text-slate-700 leading-relaxed space-y-3">
+                <p class="text-[11px] text-slate-400">Dikemas kini: 30 September 2026</p>
+                <template v-if="legalDoc === 'terms'">
+                    <p><b>1. Pengendali.</b> Platform "Tabung Umrah" dikendalikan oleh LEGSA EMPIRE ENTERPRISE, 19463A Jln Cempaka Biru, Kg Dato Abu Bakar Baginda, 43000 Kajang, Selangor (legsaempireofficial@gmail.com, 017-331 1580).</p>
+                    <p><b>2. Tujuan platform.</b> Platform ini ialah alat perancangan dan rekod simpanan peribadi. Platform ini <b>bukan bank, bukan institusi simpanan, dan tidak menerima atau memegang wang anda</b>. Semua jumlah simpanan ialah rekod yang anda masukkan sendiri dan tidak disahkan oleh kami.</p>
+                    <p><b>3. Pakej dan harga.</b> Maklumat pakej dan harga adalah panduan sahaja dan boleh berubah. Tempahan sebenar hanya sah selepas perjanjian bertulis dengan pihak yang menguruskan pakej tersebut.</p>
+                    <p><b>4. Akaun.</b> Anda bertanggungjawab menjaga kerahsiaan kata laluan dan memastikan maklumat yang diberikan adalah benar.</p>
+                    <p><b>5. Penggunaan.</b> Anda tidak boleh menyalahgunakan platform, cuba mengakses data pengguna lain, atau mengganggu sistem.</p>
+                    <p><b>6. Had tanggungjawab.</b> Platform disediakan "seadanya". Setakat yang dibenarkan undang-undang, kami tidak bertanggungjawab atas kerugian yang timbul daripada penggunaan platform, termasuk gangguan perkhidmatan atau kehilangan data.</p>
+                    <p><b>7. Perubahan.</b> Terma ini boleh dikemas kini. Penggunaan berterusan bermakna anda menerima perubahan tersebut.</p>
+                    <p><b>8. Undang-undang.</b> Terma ini tertakluk kepada undang-undang Malaysia.</p>
+                </template>
+                <template v-else>
+                    <p>Notis ini dikeluarkan mengikut Akta Perlindungan Data Peribadi 2010 (PDPA). Pengguna data ialah LEGSA EMPIRE ENTERPRISE.</p>
+                    <p><b>1. Data yang dikumpul.</b> Nama, email, nombor telefon, negeri, sasaran dan kemampuan simpanan, rekod simpanan yang anda masukkan, serta rekod persetujuan anda.</p>
+                    <p><b>2. Tujuan.</b> Untuk menyediakan akaun dan fungsi tracker simpanan, dan untuk ejen kami menghubungi anda berkaitan perancangan Umrah dan pakej (follow-up).</p>
+                    <p><b>3. Pendedahan.</b> Data anda boleh dilihat oleh pentadbir dan ejen kami. Kami tidak menjual data anda. Data disimpan menggunakan perkhidmatan Google Firebase, yang pelayannya mungkin terletak di luar Malaysia (Singapura atau negara lain).</p>
+                    <p><b>4. Keselamatan.</b> Akses dikawal melalui log masuk dan peraturan akses pangkalan data. Tiada sistem yang selamat sepenuhnya, namun kami mengambil langkah munasabah untuk melindungi data anda.</p>
+                    <p><b>5. Tempoh simpanan.</b> Data disimpan selagi akaun anda aktif atau selagi diperlukan untuk tujuan di atas.</p>
+                    <p><b>6. Hak anda.</b> Anda boleh meminta akses, pembetulan, atau pemadaman data anda, dan menarik balik persetujuan, dengan menghubungi legsaempireofficial@gmail.com atau 017-331 1580. Menarik balik persetujuan mungkin menghadkan penggunaan platform.</p>
+                    <p><b>7. Kanak-kanak.</b> Platform ini ditujukan kepada individu berumur 18 tahun ke atas.</p>
+                </template>
+            </div>
+            <div class="p-4 border-t"><button @click="legalDoc = null" class="w-full bg-emerald-800 hover:bg-emerald-900 text-white font-bold py-2.5 rounded-xl text-sm">Tutup</button></div>
         </div>
     </div>
 
@@ -1420,6 +1458,7 @@ createApp({
             profileForm: {},
             demoMode: DEMO_MODE,
             busy: false,
+            legalDoc: null,
             unsubs: [],
 
             // Auth State
