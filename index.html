@@ -1,0 +1,1971 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tabung Umrah — Platform Simpanan & Pengurusan Bakal Jemaah</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        emerald: {
+                            850: '#064e3b',
+                            900: '#022c22',
+                        },
+                        gold: {
+                            400: '#fbbf24',
+                            500: '#f59e0b',
+                            600: '#d97706',
+                            700: '#b45309',
+                        },
+                        ivory: '#fcfbf7',
+                        beige: '#f5f0e6'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Vue 3 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.4.38/dist/vue.global.prod.js"></script>
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fcfbf7;
+            color: #1f2937;
+        }
+
+        .bg-pattern {
+            background-color: #044e3a;
+            background-image: radial-gradient(#d97706 0.75px, transparent 0.75px), radial-gradient(#d97706 0.75px, #044e3a 0.75px);
+            background-size: 30px 30px;
+            background-position: 0 0, 15px 15px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-ivory antialiased">
+
+<div id="app" class="min-h-screen flex flex-col">
+
+    <!-- TOP SYSTEM ROLE BAR / ENVIRONMENT SWITCHER -->
+    <header v-if="demoMode" class="bg-slate-900 text-white text-xs px-4 py-2 border-b border-slate-800 flex flex-wrap justify-between items-center gap-2 z-50">
+        <div class="flex items-center space-x-2">
+            <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span class="font-semibold tracking-wider text-emerald-300 uppercase">Tabung Umrah SaaS Prototype</span>
+            <span class="hidden md:inline text-slate-400">| Versi Demonstrasi Interactive</span>
+        </div>
+        <div class="flex items-center space-x-2">
+            <span class="text-slate-400 hidden sm:inline">Mod Paparan:</span>
+            <button @click="currentRole = 'landing'" :class="currentRole === 'landing' ? 'bg-emerald-600 text-white font-bold' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'" class="px-3 py-1 rounded text-xs transition">
+                <i class="fa-solid fa-globe mr-1"></i> Landing Page
+            </button>
+            <button @click="switchRole('user')" :class="currentRole === 'user' ? 'bg-emerald-600 text-white font-bold' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'" class="px-3 py-1 rounded text-xs transition">
+                <i class="fa-solid fa-user-gear mr-1"></i> User Dashboard
+            </button>
+            <button @click="switchRole('admin')" :class="currentRole === 'admin' ? 'bg-gold-600 text-white font-bold' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'" class="px-3 py-1 rounded text-xs transition">
+                <i class="fa-solid fa-user-shield mr-1"></i> Admin CRM
+            </button>
+        </div>
+    </header>
+
+    <!-- DISCLAIMER BANNER -->
+    <div class="bg-amber-50 border-b border-amber-200 text-amber-900 px-4 py-1.5 text-xs text-center flex items-center justify-center space-x-2">
+        <i class="fa-solid fa-circle-info text-amber-600"></i>
+        <span><strong>PENAFIAN AMANAH:</strong> Platform ini merupakan alat perancangan dan rekod simpanan peribadi. Jumlah yang dipaparkan berdasarkan maklumat yang dimasukkan oleh pengguna dan bukan merupakan wang yang disimpan atau dipegang oleh platform.</span>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- 1. LANDING PAGE VIEW -->
+    <!-- ========================================================================= -->
+    <div v-if="currentRole === 'landing'" class="flex-1 flex flex-col">
+        <!-- Navigation Header -->
+        <nav class="bg-emerald-900 text-white sticky top-0 z-40 shadow-md">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-full bg-gold-500 flex items-center justify-center text-emerald-900 font-bold text-xl shadow">
+                        <i class="fa-solid fa-kaaba"></i>
+                    </div>
+                    <div>
+                        <span class="text-2xl font-bold tracking-tight text-white">Tabung <span class="text-gold-400">Umrah</span></span>
+                        <p class="text-xs text-emerald-200 hidden sm:block">Satu Niat. Satu Tabungan. Ke Tanah Suci.</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3 sm:space-x-4">
+                    <button @click="openLoginModal" class="text-emerald-100 hover:text-white px-3 py-2 text-sm font-medium transition">
+                        Saya Sudah Ada Akaun
+                    </button>
+                    <button @click="openRegisterModal" class="bg-gold-500 hover:bg-gold-600 text-emerald-950 font-bold px-5 py-2.5 rounded-xl shadow transition transform hover:-translate-y-0.5 text-sm">
+                        Mula Tabung Umrah
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Hero Section -->
+        <section class="relative bg-emerald-900 text-white overflow-hidden py-16 lg:py-24">
+            <div class="absolute inset-0 opacity-10 bg-pattern"></div>
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                    <div class="lg:col-span-7 space-y-6 text-center lg:text-left">
+                        <div class="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full bg-emerald-800/80 border border-emerald-700 text-gold-400 text-xs font-semibold">
+                            <i class="fa-solid fa-moon"></i>
+                            <span>Perancangan & Tracker Simpanan Umrah</span>
+                        </div>
+                        <h1 class="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-tight">
+                            Impian Umrah Bermula Dengan <span class="text-gold-400 underline decoration-gold-500/50">Satu Simpanan.</span>
+                        </h1>
+                        <p class="text-lg sm:text-xl text-emerald-100 max-w-2xl font-light leading-relaxed">
+                            Belum mampu pergi Umrah hari ini? Tidak mengapa. Mulakan dengan menyimpan sedikit demi sedikit dan pantau perjalanan anda sehingga tiba masanya untuk menjadi tetamu Allah.
+                        </p>
+                        <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-4">
+                            <button @click="openRegisterModal" class="w-full sm:w-auto bg-gold-500 hover:bg-gold-600 text-emerald-950 font-bold px-8 py-4 rounded-xl text-lg shadow-lg hover:shadow-gold-500/20 transition transform hover:-translate-y-0.5 flex items-center justify-center space-x-2">
+                                <span>Mula Tabung Umrah Sekarang</span>
+                                <i class="fa-solid fa-arrow-right"></i>
+                            </button>
+                            <button @click="openLoginModal" class="w-full sm:w-auto bg-emerald-800/60 hover:bg-emerald-800 text-white font-medium px-6 py-4 rounded-xl text-base border border-emerald-700 transition">
+                                Log Masuk Bakal Jemaah
+                            </button>
+                        </div>
+                        <div class="pt-6 flex items-center justify-center lg:justify-start space-x-6 text-emerald-200 text-xs">
+                            <span class="flex items-center"><i class="fa-solid fa-check-circle text-gold-400 mr-2"></i> PERCUMA Digunakan</span>
+                            <span class="flex items-center"><i class="fa-solid fa-check-circle text-gold-400 mr-2"></i> Rekod Automatik</span>
+                            <span class="flex items-center"><i class="fa-solid fa-check-circle text-gold-400 mr-2"></i> Bantuan Ejen Bertauliah</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Landing Hero Card Widget -->
+                    <div class="lg:col-span-5">
+                        <div class="bg-white text-slate-800 p-6 sm:p-8 rounded-2xl shadow-2xl border border-emerald-800/20 relative">
+                            <div class="absolute -top-3 -right-3 bg-gold-500 text-emerald-950 text-xs font-bold px-3 py-1 rounded-full shadow">
+                                Simulasi Sasaran
+                            </div>
+                            <h3 class="text-xl font-bold text-emerald-900 mb-1 flex items-center">
+                                <i class="fa-solid fa-calculator text-gold-600 mr-2"></i> Kalkulator Perjalanan Umrah
+                            </h3>
+                            <p class="text-xs text-slate-500 mb-6">Uji tempoh yang anda perlukan mengikut simpanan bulanan.</p>
+
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Sasaran Pakej Umrah (RM)</label>
+                                    <input type="number" v-model.number="landingCalc.target" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-600 outline-none text-sm font-semibold">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Simpanan Sedia Ada (RM)</label>
+                                    <input type="number" v-model.number="landingCalc.current" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-600 outline-none text-sm font-semibold">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Simpanan Mampu Setiap Bulan (RM)</label>
+                                    <input type="number" v-model.number="landingCalc.monthly" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-600 outline-none text-sm font-semibold">
+                                </div>
+                            </div>
+
+                            <div class="mt-6 p-4 bg-emerald-50 rounded-xl border border-emerald-100 text-center">
+                                <p class="text-xs text-emerald-800 font-medium">Berdasarkan kemampuan anda:</p>
+                                <p class="text-2xl font-extrabold text-emerald-900 my-1">
+                                    {{ landingCalcMonths }} Bulan Lagi
+                                </p>
+                                <p class="text-xs text-emerald-700 font-semibold">
+                                    Anggaran Tarikh Capai: <span class="underline">{{ landingCalcTargetDate }}</span>
+                                </p>
+                            </div>
+
+                            <button @click="applyLandingCalcAndRegister" class="w-full mt-4 bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-3 rounded-xl shadow transition text-sm flex items-center justify-center space-x-2">
+                                <span>Simpan Sasaran Ini & Daftar</span>
+                                <i class="fa-solid fa-chevron-right text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 4: BAGAIMANA IA BERFUNGSI -->
+        <section class="py-16 bg-white border-b border-slate-100">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center max-w-3xl mx-auto mb-12">
+                    <span class="text-gold-600 font-bold text-sm uppercase tracking-wider">Langkah Mudah</span>
+                    <h2 class="text-3xl font-bold text-emerald-950 mt-1">Bagaimana Tabung Umrah Berfungsi?</h2>
+                    <p class="text-slate-600 mt-2">Empat fasa ringkas untuk merealisasikan impian murni anda ke Baitullah.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <!-- Step 1 -->
+                    <div class="p-6 rounded-2xl bg-ivory border border-slate-200/80 hover:border-gold-500/50 hover:shadow-lg transition group">
+                        <div class="w-12 h-12 rounded-xl bg-emerald-900 text-gold-400 font-extrabold text-xl flex items-center justify-center mb-4 group-hover:scale-110 transition">
+                            01
+                        </div>
+                        <h3 class="text-lg font-bold text-emerald-900 mb-2">Tetapkan Impian</h3>
+                        <p class="text-slate-600 text-sm leading-relaxed">Pilih sasaran pakej Umrah yang anda impikan bersama anggaran tarikh perlepasan.</p>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="p-6 rounded-2xl bg-ivory border border-slate-200/80 hover:border-gold-500/50 hover:shadow-lg transition group">
+                        <div class="w-12 h-12 rounded-xl bg-emerald-900 text-gold-400 font-extrabold text-xl flex items-center justify-center mb-4 group-hover:scale-110 transition">
+                            02
+                        </div>
+                        <h3 class="text-lg font-bold text-emerald-900 mb-2">Mula Menabung</h3>
+                        <p class="text-slate-600 text-sm leading-relaxed">Masukkan jumlah simpanan anda secara berkala mengikut nisbah kemampuan bulanan.</p>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="p-6 rounded-2xl bg-ivory border border-slate-200/80 hover:border-gold-500/50 hover:shadow-lg transition group">
+                        <div class="w-12 h-12 rounded-xl bg-emerald-900 text-gold-400 font-extrabold text-xl flex items-center justify-center mb-4 group-hover:scale-110 transition">
+                            03
+                        </div>
+                        <h3 class="text-lg font-bold text-emerald-900 mb-2">Pantau Progress</h3>
+                        <p class="text-slate-600 text-sm leading-relaxed">Lihat perkembangan simpanan anda secara visual lengkap dengan status milestone spiritual.</p>
+                    </div>
+
+                    <!-- Step 4 -->
+                    <div class="p-6 rounded-2xl bg-ivory border border-slate-200/80 hover:border-gold-500/50 hover:shadow-lg transition group">
+                        <div class="w-12 h-12 rounded-xl bg-emerald-900 text-gold-400 font-extrabold text-xl flex items-center justify-center mb-4 group-hover:scale-110 transition">
+                            04
+                        </div>
+                        <h3 class="text-lg font-bold text-emerald-900 mb-2">Bersedia Berangkat</h3>
+                        <p class="text-slate-600 text-sm leading-relaxed">Apabila simpanan hampir mencukupi, hubungi kami untuk mendapatkan perkhidmatan perlepasan.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 5: TAK PERLU TUNGGU ADA DUIT BANYAK -->
+        <section class="py-16 bg-emerald-950 text-white relative overflow-hidden">
+            <div class="max-w-4xl mx-auto px-4 text-center relative z-10 space-y-6">
+                <div class="w-16 h-16 mx-auto rounded-full bg-emerald-900 border border-gold-500/40 flex items-center justify-center text-gold-400 text-2xl mb-4">
+                    <i class="fa-solid fa-heart"></i>
+                </div>
+                <h2 class="text-2xl sm:text-4xl font-extrabold text-gold-400 leading-snug">
+                    "Tak Perlu Tunggu Ada Duit Banyak Untuk Bermula"
+                </h2>
+                <div class="text-base sm:text-lg text-emerald-100 font-light leading-relaxed space-y-3 max-w-2xl mx-auto">
+                    <p>Tidak semua orang mampu membayar Umrah secara sekaligus hari ini.</p>
+                    <p class="font-semibold text-white">Tetapi ramai orang boleh mula menyimpan hari ini.</p>
+                    <div class="flex justify-center space-x-3 py-2 text-gold-400 font-bold text-xl">
+                        <span>RM10</span> • <span>RM20</span> • <span>RM50</span> • <span>RM100</span>
+                    </div>
+                    <p>Yang penting bukan berapa besar permulaan kita, tetapi kita sudah mula melangkah menuju impian murni itu.</p>
+                </div>
+                <div class="pt-4">
+                    <button @click="openRegisterModal" class="bg-gold-500 hover:bg-gold-600 text-emerald-950 font-bold px-8 py-3.5 rounded-xl text-lg shadow-lg transition transform hover:scale-105">
+                        Saya Nak Mula Menabung Sekarang
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- FEATURED PACKAGES SHOWCASE -->
+        <section class="py-16 bg-ivory">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-10">
+                    <div>
+                        <span class="text-gold-600 font-bold text-sm uppercase">Pilihan Pakej Rujukan</span>
+                        <h2 class="text-3xl font-bold text-emerald-950 mt-1">Pakej Umrah Popular</h2>
+                    </div>
+                    <p class="text-slate-500 text-sm mt-2 md:mt-0">Tetapkan sasaran berdasarkan anggaran pakej rasmi.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div v-for="pkg in packages" :key="pkg.id" class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition flex flex-col">
+                        <div class="h-48 bg-slate-200 relative">
+                            <img :src="pkg.image" :alt="pkg.name" class="w-full h-full object-cover" @error="onImgError">
+                            <div class="absolute top-3 right-3 bg-emerald-900/90 text-gold-400 text-xs font-bold px-3 py-1 rounded-full">
+                                {{ pkg.duration }}
+                            </div>
+                        </div>
+                        <div class="p-6 flex-1 flex flex-col justify-between">
+                            <div>
+                                <h3 class="text-xl font-bold text-emerald-900 mb-1">{{ pkg.name }}</h3>
+                                <p class="text-2xl font-extrabold text-gold-600 mb-4">RM {{ formatNumber(pkg.price) }}</p>
+                                <p class="text-slate-600 text-sm mb-4 line-clamp-2">{{ pkg.description }}</p>
+                                
+                                <div class="space-y-2 text-xs text-slate-600 border-t border-slate-100 pt-4">
+                                    <div class="flex items-center"><i class="fa-solid fa-hotel text-emerald-700 mr-2 w-4"></i> Makkah: {{ pkg.hotel_makkah }}</div>
+                                    <div class="flex items-center"><i class="fa-solid fa-mosque text-emerald-700 mr-2 w-4"></i> Madinah: {{ pkg.hotel_madinah }}</div>
+                                </div>
+                            </div>
+                            <button @click="selectPackageToRegister(pkg)" class="w-full mt-6 bg-emerald-800 hover:bg-emerald-900 text-white font-bold py-2.5 rounded-xl transition text-sm">
+                                Pilih Sebagai Sasaran
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="bg-emerald-950 text-emerald-200 py-12 border-t border-emerald-900 mt-auto">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <span class="text-xl font-bold text-white">Tabung <span class="text-gold-400">Umrah</span></span>
+                    <p class="text-xs text-emerald-300/80 mt-2 leading-relaxed">
+                        Platform pengurusan impian dan rekod simpanan peribadi bakal jemaah Umrah Malaysia. Menghubungkan niat anda dengan persediaan sebenar.
+                    </p>
+                </div>
+                <div class="text-xs space-y-2">
+                    <p class="font-bold text-white text-sm mb-2">Hubungi Kami</p>
+                    <p><i class="fa-solid fa-envelope mr-2 text-gold-400"></i> sokongan@tabungumrah.app</p>
+                    <p><i class="fa-solid fa-phone mr-2 text-gold-400"></i> +60 3-8000 1234</p>
+                    <p><i class="fa-solid fa-location-dot mr-2 text-gold-400"></i> Bandar Baru Bangi, Selangor</p>
+                </div>
+                <div class="text-xs">
+                    <p class="font-bold text-white text-sm mb-2">Notis Keselamatan</p>
+                    <p class="text-emerald-300/70 leading-relaxed">
+                        Sistem ini TIDAK mengumpul deposit simpanan secara langsung. Semua data simpanan adalah rekod peribadi pengguna untuk tujuan motivasi & pemantauan kendiri.
+                    </p>
+                </div>
+            </div>
+            <div class="max-w-7xl mx-auto px-4 text-center text-xs text-emerald-400/60 mt-8 pt-6 border-t border-emerald-900">
+                &copy; 2026 Tabung Umrah System. Hak Cipta Terpelihara.
+            </div>
+        </footer>
+    </div>
+
+
+    <!-- ========================================================================= -->
+    <!-- 2. USER DASHBOARD VIEW -->
+    <!-- ========================================================================= -->
+    <div v-if="currentRole === 'user'" class="flex-1 flex flex-col bg-slate-50 min-h-screen pb-20 md:pb-8">
+        <!-- User Header -->
+        <header class="bg-emerald-900 text-white shadow-md sticky top-0 z-30">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 rounded-full bg-gold-500 flex items-center justify-center text-emerald-950 font-bold">
+                        <i class="fa-solid fa-kaaba"></i>
+                    </div>
+                    <span class="font-bold text-lg text-white">Tabung <span class="text-gold-400">Umrah</span></span>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <!-- Notification Bell -->
+                    <div class="relative">
+                        <button @click="showUserNotifs = !showUserNotifs" class="text-emerald-200 hover:text-white p-2 rounded-full relative">
+                            <i class="fa-solid fa-bell text-lg"></i>
+                            <span v-if="unreadUserNotifsCount > 0" class="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                                {{ unreadUserNotifsCount }}
+                            </span>
+                        </button>
+                        <!-- Notif Dropdown -->
+                        <div v-if="showUserNotifs" class="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-slate-200 text-slate-800 z-50 p-3">
+                            <div class="flex justify-between items-center border-b pb-2 mb-2">
+                                <span class="font-bold text-xs text-emerald-900">Notifikasi Perjalanan</span>
+                                <button @click="markNotifsRead" class="text-[11px] text-emerald-700 hover:underline">Tanda Semua Dibaca</button>
+                            </div>
+                            <div class="space-y-2 max-h-60 overflow-y-auto custom-scrollbar">
+                                <div v-for="n in currentUserNotifs" :key="n.id" class="p-2 rounded-lg text-xs" :class="n.is_read ? 'bg-slate-50' : 'bg-emerald-50 border-l-2 border-emerald-600'">
+                                    <p class="font-semibold text-slate-900">{{ n.title }}</p>
+                                    <p class="text-slate-600 mt-0.5">{{ n.message }}</p>
+                                    <span class="text-[10px] text-slate-400 mt-1 block">{{ n.created_at }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- User Profile Dropdown Pill -->
+                    <div class="flex items-center space-x-2 bg-emerald-800 px-3 py-1.5 rounded-full border border-emerald-700 text-xs">
+                        <div class="w-6 h-6 rounded-full bg-gold-400 text-emerald-950 flex items-center justify-center font-bold">
+                            {{ activeUser.name.charAt(0) }}
+                        </div>
+                        <span class="font-medium text-white hidden sm:inline">{{ activeUser.name }}</span>
+                        <button @click="openProfileModal" class="text-emerald-200 hover:text-white ml-1">
+                            <i class="fa-solid fa-gear"></i>
+                        </button>
+                        <button @click="logout" class="text-emerald-200 hover:text-white ml-1" title="Log Keluar">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- User Main Body -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full space-y-6 flex-1">
+            
+            <!-- Greeting Header -->
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80 gap-4">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold text-emerald-950">
+                        Assalamualaikum, {{ activeUser.name }}
+                    </h1>
+                    <p class="text-slate-600 text-sm mt-1">
+                        Teruskan langkah anda menuju Tanah Suci. Niat yang ikhlas sentiasa dipermudahkan.
+                    </p>
+                </div>
+                <div class="flex items-center space-x-3 w-full md:w-auto">
+                    <button @click="openAddSavingsModal" class="flex-1 md:flex-none bg-gold-500 hover:bg-gold-600 text-emerald-950 font-bold px-6 py-3 rounded-xl shadow transition flex items-center justify-center space-x-2 text-sm">
+                        <i class="fa-solid fa-plus-circle text-base"></i>
+                        <span>+ Tambah Simpanan</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- SECTION 7: HERO PROGRESS CARD -->
+            <div class="bg-gradient-to-br from-emerald-900 via-emerald-850 to-emerald-950 text-white p-6 sm:p-8 rounded-3xl shadow-xl relative overflow-hidden border border-emerald-800">
+                <div class="absolute -right-10 -bottom-10 opacity-10 text-gold-400 pointer-events-none">
+                    <i class="fa-solid fa-kaaba text-[220px]"></i>
+                </div>
+
+                <div class="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                    <div class="lg:col-span-8 space-y-6">
+                        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-emerald-800/80 pb-4">
+                            <div>
+                                <span class="text-xs uppercase tracking-widest text-gold-400 font-semibold">Sasaran Umrah Anda</span>
+                                <h2 class="text-2xl font-bold text-white">{{ userTargetPackageName }}</h2>
+                            </div>
+                            <div class="bg-emerald-800/80 px-3 py-1 rounded-full text-xs text-emerald-200 border border-emerald-700">
+                                Target Tarikh: <span class="text-white font-semibold">{{ activeUser.target_date || 'Belum Ditetapkan' }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Progress Bar & Big Percentage -->
+                        <div>
+                            <div class="flex justify-between items-end mb-2">
+                                <div>
+                                    <span class="text-xs text-emerald-200">Pencapaian Keseluruhan</span>
+                                    <div class="text-3xl sm:text-4xl font-extrabold text-gold-400">
+                                        {{ userProgress.toFixed(1) }}%
+                                    </div>
+                                </div>
+                                <span class="text-xs font-semibold text-emerald-200 bg-emerald-800/60 px-3 py-1 rounded-md">
+                                    {{ currentMilestone.phase }} : {{ currentMilestone.title }}
+                                </span>
+                            </div>
+
+                            <!-- Big Progress Bar -->
+                            <div class="w-full h-5 bg-emerald-950/80 rounded-full overflow-hidden p-1 border border-emerald-800">
+                                <div class="h-full bg-gradient-to-r from-gold-600 via-gold-500 to-amber-300 rounded-full transition-all duration-1000 shadow-md" :style="{ width: userProgress + '%' }"></div>
+                            </div>
+                        </div>
+
+                        <!-- 3 Big Numbers Card Grid -->
+                        <div class="grid grid-cols-3 gap-2 sm:gap-4 pt-2">
+                            <div class="bg-emerald-800/40 border border-emerald-700/50 p-3 sm:p-4 rounded-2xl">
+                                <span class="text-[11px] sm:text-xs text-emerald-300 block">Jumlah Sasaran</span>
+                                <span class="text-lg sm:text-2xl font-extrabold text-white">RM {{ formatNumber(activeUser.target_amount) }}</span>
+                            </div>
+                            <div class="bg-emerald-800/40 border border-emerald-700/50 p-3 sm:p-4 rounded-2xl">
+                                <span class="text-[11px] sm:text-xs text-emerald-300 block">Sudah Ditabung</span>
+                                <span class="text-lg sm:text-2xl font-extrabold text-gold-400">RM {{ formatNumber(userTotalSaved) }}</span>
+                            </div>
+                            <div class="bg-emerald-800/40 border border-emerald-700/50 p-3 sm:p-4 rounded-2xl">
+                                <span class="text-[11px] sm:text-xs text-emerald-300 block">Baki Diperlukan</span>
+                                <span class="text-lg sm:text-2xl font-extrabold text-emerald-100">RM {{ formatNumber(userRemainingAmount) }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Milestone Journey Quick Info -->
+                    <div class="lg:col-span-4 bg-emerald-800/60 p-6 rounded-2xl border border-emerald-700/60 flex flex-col justify-between space-y-4">
+                        <div>
+                            <div class="flex items-center space-x-2 text-gold-400 text-sm font-bold mb-2">
+                                <i class="fa-solid fa-compass text-lg"></i>
+                                <span>Status Perjalanan Spiritual</span>
+                            </div>
+                            <p class="text-xs text-emerald-100 leading-relaxed">
+                                {{ currentMilestone.description }}
+                            </p>
+                        </div>
+
+                        <!-- CTA IF NEAR OR AT TARGET -->
+                        <div v-if="userProgress >= 80" class="p-3 bg-gold-500/20 border border-gold-500/40 rounded-xl text-center">
+                            <p class="text-xs font-bold text-gold-300 mb-2">🎉 Alhamdulillah! Impian anda semakin dekat.</p>
+                            <button @click="triggerReadyCTA" class="w-full bg-gold-500 hover:bg-gold-600 text-emerald-950 font-bold py-2 rounded-lg text-xs shadow transition">
+                                Saya Sudah Bersedia Untuk Umrah
+                            </button>
+                        </div>
+                        <div v-else class="text-right">
+                            <span class="text-[11px] text-emerald-300 italic">Baitullah memanggil jiwa yang berusaha.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 8: STATUS JOURNEY (6 PHASES) -->
+            <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
+                <h3 class="text-lg font-bold text-emerald-900 mb-4 flex items-center">
+                    <i class="fa-solid fa-route text-gold-600 mr-2"></i> Peta Perjalanan Tabung Umrah (6 Fasa)
+                </h3>
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                    <div v-for="m in allMilestones" :key="m.phase" 
+                         class="p-3 rounded-xl border text-center transition flex flex-col justify-between"
+                         :class="m.phase === currentMilestone.phase ? 'bg-emerald-50 border-emerald-600 ring-2 ring-emerald-600/20' : (m.minProgress <= userProgress ? 'bg-slate-50 border-emerald-300 opacity-90' : 'bg-slate-50/50 border-slate-200 opacity-50')">
+                        <div>
+                            <span class="text-xl mb-1 block">{{ m.icon }}</span>
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">{{ m.phase }}</span>
+                            <span class="text-xs font-bold text-emerald-950 block my-1">{{ m.title }}</span>
+                        </div>
+                        <span class="text-[10px] font-semibold text-emerald-700 bg-white px-2 py-0.5 rounded border border-slate-200 mt-2 block">
+                            {{ m.minProgress }}% - {{ m.maxProgress }}%
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GRID: MONTHLY TARGET + CALCULATOR -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- SECTION 11: MONTHLY SAVINGS TARGET -->
+                <div class="lg:col-span-6 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-bold text-emerald-900 flex items-center">
+                                <i class="fa-solid fa-bullseye text-gold-600 mr-2"></i> Target Simpanan Bulan Ini
+                            </h3>
+                            <button @click="openProfileModal" class="text-xs text-emerald-700 hover:underline">Tukar Target</button>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-3 mb-4 text-center">
+                            <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                                <span class="text-[11px] text-slate-500 block">Sasaran Bulanan</span>
+                                <span class="text-base font-bold text-slate-800">RM {{ formatNumber(activeUser.monthly_target) }}</span>
+                            </div>
+                            <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-200">
+                                <span class="text-[11px] text-emerald-700 block">Sudah Disimpan</span>
+                                <span class="text-base font-bold text-emerald-900">RM {{ formatNumber(userCurrentMonthSaved) }}</span>
+                            </div>
+                            <div class="p-3 bg-amber-50 rounded-xl border border-amber-200">
+                                <span class="text-[11px] text-amber-700 block">Baki Target</span>
+                                <span class="text-base font-bold text-amber-900">RM {{ formatNumber(userMonthlyRemaining) }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Progress bar bulanan -->
+                        <div class="space-y-1">
+                            <div class="flex justify-between text-xs text-slate-600 font-medium">
+                                <span>Pencapaian Bulanan</span>
+                                <span>{{ userMonthlyProgress.toFixed(0) }}%</span>
+                            </div>
+                            <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
+                                <div class="h-full bg-emerald-600 rounded-full transition-all duration-500" :style="{ width: userMonthlyProgress + '%' }"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div v-if="userMonthlyProgress >= 100" class="mt-4 p-3 bg-emerald-100 border border-emerald-300 rounded-xl text-emerald-900 text-xs font-bold flex items-center space-x-2">
+                        <span class="text-lg">🎉</span>
+                        <span>Alhamdulillah! Target simpanan bulan ini telah dicapai.</span>
+                    </div>
+                </div>
+
+                <!-- SECTION 12: SAVINGS CALCULATOR -->
+                <div class="lg:col-span-6 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
+                    <h3 class="text-lg font-bold text-emerald-900 mb-4 flex items-center">
+                        <i class="fa-solid fa-calculator text-gold-600 mr-2"></i> Kalkulator Berapa Lama Lagi?
+                    </h3>
+                    <div class="space-y-3 text-xs">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block font-semibold text-slate-600 mb-1">Target Umrah (RM)</label>
+                                <input type="number" v-model.number="activeUser.target_amount" min="1" @change="saveUsersToStorage" class="w-full p-2 border rounded-lg bg-slate-50 font-semibold">
+                            </div>
+                            <div>
+                                <label class="block font-semibold text-slate-600 mb-1">Simpanan Sekarang (RM)</label>
+                                <input type="number" :value="userTotalSaved" disabled class="w-full p-2 border rounded-lg bg-slate-200 text-slate-700 font-semibold cursor-not-allowed">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-slate-600 mb-1">Kemampuan Simpanan Bulanan (RM)</label>
+                            <input type="number" v-model.number="activeUser.monthly_target" min="1" @change="saveUsersToStorage" class="w-full p-2 border rounded-lg bg-slate-50 font-semibold">
+                        </div>
+
+                        <div class="p-3 bg-emerald-900 text-white rounded-xl text-center space-y-1 mt-2">
+                            <p class="text-[11px] text-emerald-200">Hasil Pengiraan Real-Time:</p>
+                            <p class="text-lg font-bold text-gold-400">
+                                Anda memerlukan kira-kira <span class="text-white underline">{{ userCalcMonthsRemaining }} bulan</span> lagi.
+                            </p>
+                            <p class="text-xs text-emerald-100">
+                                Anggaran Selesai: <strong>{{ userCalcEstimatedDate }}</strong>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 10: TRANSACTION HISTORY TABLE -->
+            <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
+                    <div>
+                        <h3 class="text-lg font-bold text-emerald-900 flex items-center">
+                            <i class="fa-solid fa-history text-gold-600 mr-2"></i> Sejarah Rekod Simpanan
+                        </h3>
+                        <p class="text-xs text-slate-500">Semua transaksi simpanan yang telah anda rekodkan.</p>
+                    </div>
+                    <button @click="openAddSavingsModal" class="bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold px-4 py-2 rounded-lg transition">
+                        + Rekod Transaksi
+                    </button>
+                </div>
+
+                <!-- Table -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-slate-600">
+                        <thead class="bg-slate-50 text-slate-700 text-xs uppercase border-y border-slate-200">
+                            <tr>
+                                <th class="py-3 px-4">Tarikh</th>
+                                <th class="py-3 px-4">Jumlah (RM)</th>
+                                <th class="py-3 px-4">Jenis</th>
+                                <th class="py-3 px-4">Nota</th>
+                                <th class="py-3 px-4 text-right">Tindakan</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <tr v-for="t in userSavingsHistory" :key="t.id" class="hover:bg-slate-50/80">
+                                <td class="py-3 px-4 font-medium text-slate-900">{{ formatDate(t.date) }}</td>
+                                <td class="py-3 px-4 font-bold text-emerald-700">+ RM {{ formatNumber(t.amount) }}</td>
+                                <td class="py-3 px-4">
+                                    <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800">
+                                        {{ t.type }}
+                                    </span>
+                                </td>
+                                <td class="py-3 px-4 text-xs text-slate-500">{{ t.note || '-' }}</td>
+                                <td class="py-3 px-4 text-right space-x-2">
+                                    <button @click="editTransaction(t)" class="text-slate-400 hover:text-emerald-700">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </button>
+                                    <button @click="confirmDeleteTransaction(t.id)" class="text-slate-400 hover:text-red-600">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr v-if="userSavingsHistory.length === 0">
+                                <td colspan="5" class="text-center py-8 text-slate-400 text-sm">
+                                    <!-- SECTION 44: EMPTY STATE -->
+                                    <i class="fa-solid fa-coins text-3xl mb-2 text-slate-300 block"></i>
+                                    <p>Belum ada rekod simpanan.</p>
+                                    <p class="text-xs text-slate-400 mt-1">Mari mulakan langkah pertama anda hari ini.</p>
+                                    <button @click="openAddSavingsModal" class="mt-3 bg-emerald-700 text-white px-4 py-1.5 rounded-lg text-xs font-bold">
+                                        + Tambah Simpanan Sekarang
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SECTION 13: TARGET PACKAGES SELECTOR -->
+            <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
+                <h3 class="text-lg font-bold text-emerald-900 mb-2">Pilihan Pakej Rujukan Umrah</h3>
+                <p class="text-xs text-slate-500 mb-4">Anda boleh menukar pakej sasaran pada bila-bila masa mengikut citarasa.</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div v-for="pkg in packages" :key="pkg.id" 
+                         class="p-4 rounded-xl border transition flex flex-col justify-between"
+                         :class="activeUser.target_package_id === pkg.id ? 'border-emerald-600 bg-emerald-50/50 ring-2 ring-emerald-600/20' : 'border-slate-200 bg-white hover:border-slate-300'">
+                        <div>
+                            <div class="flex justify-between items-start mb-2">
+                                <h4 class="font-bold text-emerald-900">{{ pkg.name }}</h4>
+                                <span v-if="activeUser.target_package_id === pkg.id" class="bg-emerald-700 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                                    Pilihan Anda
+                                </span>
+                            </div>
+                            <p class="text-xl font-extrabold text-gold-600 mb-2">RM {{ formatNumber(pkg.price) }}</p>
+                            <p class="text-xs text-slate-600 mb-3">{{ pkg.description }}</p>
+                        </div>
+                        <button @click="setUserTargetPackage(pkg)" class="w-full py-2 rounded-lg text-xs font-bold transition"
+                                :class="activeUser.target_package_id === pkg.id ? 'bg-emerald-800 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'">
+                            {{ activeUser.target_package_id === pkg.id ? 'Pakej Semasa' : 'Pilih Pakej Ini' }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MOTIVATIONAL CONTENT CARD -->
+            <div class="bg-amber-50/60 border border-amber-200/80 p-6 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div class="space-y-1">
+                    <span class="text-xs font-bold text-amber-800 uppercase tracking-wider"><i class="fa-solid fa-quote-left mr-1"></i> Mesej Perkongsian Hijrah</span>
+                    <h4 class="text-base font-bold text-amber-950">{{ activeMotivation.title }}</h4>
+                    <p class="text-xs text-amber-900 leading-relaxed max-w-3xl">{{ activeMotivation.content }}</p>
+                </div>
+                <button @click="triggerReadyCTA" class="bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow transition whitespace-nowrap">
+                    Hubungi Ejen Umrah
+                </button>
+            </div>
+
+        </main>
+
+        <!-- MOBILE BOTTOM NAVIGATION -->
+        <div class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-40 flex justify-around items-center py-2 text-xs">
+            <button @click="userNav = 'home'" class="flex flex-col items-center text-emerald-800">
+                <i class="fa-solid fa-house text-lg"></i>
+                <span class="text-[10px] mt-0.5 font-bold">Utama</span>
+            </button>
+            <button @click="openAddSavingsModal" class="flex flex-col items-center text-gold-600 font-bold">
+                <div class="w-10 h-10 rounded-full bg-gold-500 text-emerald-950 flex items-center justify-center -mt-5 shadow-lg border-2 border-white">
+                    <i class="fa-solid fa-plus text-base"></i>
+                </div>
+                <span class="text-[10px] mt-0.5">Tambah</span>
+            </button>
+            <button @click="openProfileModal" class="flex flex-col items-center text-slate-600">
+                <i class="fa-solid fa-user text-lg"></i>
+                <span class="text-[10px] mt-0.5">Profil</span>
+            </button>
+        </div>
+    </div>
+
+
+    <!-- ========================================================================= -->
+    <!-- 3. ADMIN / OWNER / AGENT CRM DASHBOARD VIEW -->
+    <!-- ========================================================================= -->
+    <div v-if="currentRole === 'admin'" class="flex-1 flex bg-slate-100 min-h-screen">
+        <!-- Admin Sidebar -->
+        <aside class="w-64 bg-emerald-950 text-emerald-100 hidden lg:flex flex-col justify-between p-4 shadow-xl border-r border-emerald-900">
+            <div class="space-y-6">
+                <!-- Admin Brand -->
+                <div class="flex items-center space-x-3 px-2 py-2">
+                    <div class="w-9 h-9 rounded-xl bg-gold-500 flex items-center justify-center text-emerald-950 font-bold text-lg">
+                        <i class="fa-solid fa-kaaba"></i>
+                    </div>
+                    <div>
+                        <h2 class="font-bold text-white text-base">Tabung Umrah</h2>
+                        <span class="text-[10px] bg-emerald-800 text-gold-300 px-2 py-0.5 rounded uppercase tracking-wider font-semibold">Admin CRM</span>
+                    </div>
+                </div>
+
+                <!-- Navigation List -->
+                <nav class="space-y-1 text-xs font-medium">
+                    <button @click="adminTab = 'dashboard'" :class="adminTab === 'dashboard' ? 'bg-emerald-800 text-white font-bold' : 'text-emerald-200 hover:bg-emerald-900'" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl transition">
+                        <i class="fa-solid fa-chart-pie w-5 text-gold-400"></i>
+                        <span>Dashboard Utama</span>
+                    </button>
+                    <button @click="adminTab = 'users'" :class="adminTab === 'users' ? 'bg-emerald-800 text-white font-bold' : 'text-emerald-200 hover:bg-emerald-900'" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl transition">
+                        <i class="fa-solid fa-users w-5 text-gold-400"></i>
+                        <span>Pengguna & Leads</span>
+                        <span class="ml-auto bg-emerald-700 text-white px-2 py-0.5 rounded-full text-[10px]">{{ allUsers.length }}</span>
+                    </button>
+                    <button @click="adminTab = 'followups'" :class="adminTab === 'followups' ? 'bg-emerald-800 text-white font-bold' : 'text-emerald-200 hover:bg-emerald-900'" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl transition">
+                        <i class="fa-solid fa-comments w-5 text-gold-400"></i>
+                        <span>Follow-Up CRM</span>
+                    </button>
+                    <button @click="adminTab = 'packages'" :class="adminTab === 'packages' ? 'bg-emerald-800 text-white font-bold' : 'text-emerald-200 hover:bg-emerald-900'" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl transition">
+                        <i class="fa-solid fa-box-archive w-5 text-gold-400"></i>
+                        <span>Urus Pakej</span>
+                    </button>
+                    <button @click="adminTab = 'analytics'" :class="adminTab === 'analytics' ? 'bg-emerald-800 text-white font-bold' : 'text-emerald-200 hover:bg-emerald-900'" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl transition">
+                        <i class="fa-solid fa-chart-line w-5 text-gold-400"></i>
+                        <span>Analytics & Funnel</span>
+                    </button>
+                    <button @click="adminTab = 'content'" :class="adminTab === 'content' ? 'bg-emerald-800 text-white font-bold' : 'text-emerald-200 hover:bg-emerald-900'" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl transition">
+                        <i class="fa-solid fa-newspaper w-5 text-gold-400"></i>
+                        <span>Kandungan Motivasi</span>
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Admin Profile Bottom -->
+            <div class="border-t border-emerald-900 pt-4 px-2">
+                <div class="flex items-center justify-between text-xs">
+                    <div>
+                        <p class="font-bold text-white">Ejen Travel Admin</p>
+                        <p class="text-[10px] text-emerald-400">admin@tabungumrah.app</p>
+                    </div>
+                    <button @click="logout" class="text-emerald-400 hover:text-white" title="Keluar">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Admin Main Content Area -->
+        <div class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+            <!-- Mobile Admin Navigation Header -->
+            <header class="bg-emerald-950 text-white p-4 lg:hidden flex justify-between items-center shadow">
+                <span class="font-bold text-base">Tabung Umrah Admin <button @click="logout" class="ml-2 text-emerald-300" title="Keluar"><i class="fa-solid fa-right-from-bracket"></i></button></span>
+                <select v-model="adminTab" class="bg-emerald-900 text-white text-xs p-1.5 rounded border border-emerald-700">
+                    <option value="dashboard">Dashboard</option>
+                    <option value="users">Pengguna & Leads</option>
+                    <option value="followups">Follow-Up CRM</option>
+                    <option value="packages">Urus Pakej</option>
+                    <option value="analytics">Analytics</option>
+                    <option value="content">Kandungan Motivasi</option>
+                </select>
+            </header>
+
+            <main class="p-4 sm:p-8 space-y-6 flex-1">
+                
+                <!-- SECTION 15: ADMIN KPI CARDS -->
+                <div v-if="adminTab === 'dashboard'" class="space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                            <h1 class="text-2xl font-bold text-slate-900">Ringkasan Prestasi & Leads</h1>
+                            <p class="text-xs text-slate-500">Pantau perkembangan simpanan bakal jemaah secara terkumpul.</p>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button @click="exportUsersCSV" class="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold px-3 py-2 rounded-lg transition shadow-sm">
+                                <i class="fa-solid fa-download mr-1"></i> Export Leads CSV
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 6 KPI CARDS -->
+                    <div class="grid grid-cols-2 lg:grid-cols-6 gap-4">
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                            <span class="text-[11px] font-semibold text-slate-500 block">Total Users</span>
+                            <span class="text-2xl font-extrabold text-slate-900 my-1 block">{{ adminKpi.totalUsers }}</span>
+                            <span class="text-[10px] text-emerald-600 font-semibold">+{{ adminKpi.newUsersMonth }} bulan ini</span>
+                        </div>
+
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                            <span class="text-[11px] font-semibold text-slate-500 block">Active Savers</span>
+                            <span class="text-2xl font-extrabold text-emerald-800 my-1 block">{{ adminKpi.activeSavers }}</span>
+                            <span class="text-[10px] text-slate-400">Menabung berkala</span>
+                        </div>
+
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-amber-500">
+                            <span class="text-[11px] font-semibold text-slate-500 block">Near Target (≥80%)</span>
+                            <span class="text-2xl font-extrabold text-amber-600 my-1 block">{{ adminKpi.nearTarget }}</span>
+                            <span class="text-[10px] text-amber-700 font-bold">Sedia Di-Follow-up</span>
+                        </div>
+
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-emerald-600">
+                            <span class="text-[11px] font-semibold text-slate-500 block">Target Reached</span>
+                            <span class="text-2xl font-extrabold text-emerald-600 my-1 block">{{ adminKpi.targetReached }}</span>
+                            <span class="text-[10px] text-emerald-700 font-bold">Hot Lead 100%</span>
+                        </div>
+
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm col-span-2">
+                            <span class="text-[11px] font-semibold text-slate-500 block">Total Recorded Savings</span>
+                            <span class="text-2xl font-extrabold text-emerald-900 my-1 block">RM {{ formatNumber(adminKpi.totalSavings) }}</span>
+                            <span class="text-[10px] text-slate-500">Jumlah keseluruhan terkumpul</span>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 47 & 48: OPPORTUNITY ALERT / LEADS TO WATCH -->
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        <div class="lg:col-span-8 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                            <div class="flex justify-between items-center border-b pb-3">
+                                <h3 class="text-base font-bold text-slate-900 flex items-center">
+                                    <i class="fa-solid fa-fire text-red-500 mr-2"></i> Opportunity Alerts (Tindakan Ejen Segera)
+                                </h3>
+                                <span class="text-xs text-slate-500">Automatic CRM Priority</span>
+                            </div>
+
+                            <div class="space-y-3">
+                                <!-- Hot Lead Alert -->
+                                <div v-for="u in hotLeadsAlerts" :key="u.id" class="p-3 bg-red-50 border border-red-200 rounded-xl flex items-center justify-between">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-10 h-10 rounded-full bg-red-100 text-red-700 font-bold flex items-center justify-center text-sm">
+                                            {{ u.name.charAt(0) }}
+                                        </div>
+                                        <div>
+                                            <p class="font-bold text-sm text-slate-900">{{ u.name }} <span class="text-xs font-semibold text-red-600">({{ u.progress.toFixed(1) }}%)</span></p>
+                                            <p class="text-xs text-slate-500">Baki RM {{ formatNumber(u.target_amount - u.totalSaved) }} • Last updated: {{ u.lastUpdate }}</p>
+                                        </div>
+                                    </div>
+                                    <button @click="openAdminUserProfile(u)" class="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition">
+                                        View & Contact
+                                    </button>
+                                </div>
+
+                                <!-- Inactive Alert -->
+                                <div v-for="u in inactiveAlerts" :key="u.id" class="p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-10 h-10 rounded-full bg-amber-100 text-amber-700 font-bold flex items-center justify-center text-sm">
+                                            ⚠️
+                                        </div>
+                                        <div>
+                                            <p class="font-bold text-sm text-slate-900">{{ u.name }} <span class="text-xs font-semibold text-amber-700">({{ u.progress.toFixed(1) }}%)</span></p>
+                                            <p class="text-xs text-amber-800">Tiada kemaskini simpanan selama 30+ hari.</p>
+                                        </div>
+                                    </div>
+                                    <button @click="openAdminUserProfile(u)" class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition">
+                                        Send Reminder
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quick Lead Funnel Widget -->
+                        <div class="lg:col-span-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                            <h3 class="text-base font-bold text-slate-900 mb-4">Lead Funnel Stage</h3>
+                            <div class="space-y-3 text-xs">
+                                <div class="flex justify-between items-center p-2 bg-slate-50 rounded-lg">
+                                    <span class="font-medium text-slate-600">NEW REGISTRATION</span>
+                                    <span class="font-bold text-slate-900">{{ funnelStats.registered }}</span>
+                                </div>
+                                <div class="flex justify-between items-center p-2 bg-blue-50 rounded-lg">
+                                    <span class="font-medium text-blue-800">STARTED SAVING</span>
+                                    <span class="font-bold text-blue-900">{{ funnelStats.startedSaving }}</span>
+                                </div>
+                                <div class="flex justify-between items-center p-2 bg-yellow-50 rounded-lg">
+                                    <span class="font-medium text-yellow-800">50% TARGET</span>
+                                    <span class="font-bold text-yellow-900">{{ funnelStats.reached50 }}</span>
+                                </div>
+                                <div class="flex justify-between items-center p-2 bg-amber-50 rounded-lg">
+                                    <span class="font-medium text-amber-800">80% TARGET</span>
+                                    <span class="font-bold text-amber-900">{{ funnelStats.reached80 }}</span>
+                                </div>
+                                <div class="flex justify-between items-center p-2 bg-emerald-50 rounded-lg border border-emerald-300">
+                                    <span class="font-bold text-emerald-800">100% TARGET REACHED</span>
+                                    <span class="font-extrabold text-emerald-950">{{ funnelStats.reached100 }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 18 & 41: USER TABLE ADMIN WITH SEARCH & FILTERS -->
+                <div v-if="adminTab === 'users' || adminTab === 'dashboard'" class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-900">Pengurusan Bakal Jemaah & Leads</h3>
+                            <p class="text-xs text-slate-500">Senarai penuh pengguna berdaftar, status simpanan dan tahap keutamaan.</p>
+                        </div>
+
+                        <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                            <!-- Search -->
+                            <input type="text" v-model="adminSearchQuery" placeholder="Cari Nama / Email / Phone..." class="px-3 py-1.5 text-xs border rounded-lg focus:ring-2 focus:ring-emerald-600 outline-none w-full md:w-48">
+                            
+                            <!-- Filter priority -->
+                            <select v-model="adminPriorityFilter" class="px-3 py-1.5 text-xs border rounded-lg focus:ring-2 focus:ring-emerald-600 outline-none">
+                                <option value="ALL">Semua Priority</option>
+                                <option value="HOT">🔥 HOT LEAD (≥90%)</option>
+                                <option value="WARM">🟠 WARM LEAD (70-89%)</option>
+                                <option value="DEVELOPING">🟡 DEVELOPING (40-69%)</option>
+                                <option value="EARLY">🔵 EARLY (&lt;40%)</option>
+                            </select>
+
+                            <!-- Filter Lead Status -->
+                            <select v-model="adminStatusFilter" class="px-3 py-1.5 text-xs border rounded-lg focus:ring-2 focus:ring-emerald-600 outline-none">
+                                <option value="ALL">Semua Lead Status</option>
+                                <option value="NEW">NEW</option>
+                                <option value="SAVING">SAVING</option>
+                                <option value="NEAR TARGET">NEAR TARGET</option>
+                                <option value="TARGET REACHED">TARGET REACHED</option>
+                                <option value="CONTACTED">CONTACTED</option>
+                                <option value="CONSULTATION">CONSULTATION</option>
+                                <option value="BOOKED">BOOKED</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Users Table -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs text-slate-600">
+                            <thead class="bg-slate-50 text-slate-700 uppercase font-semibold border-y border-slate-200">
+                                <tr>
+                                    <th class="py-3 px-3">Pengguna</th>
+                                    <th class="py-3 px-3">Negeri</th>
+                                    <th class="py-3 px-3 text-right">Sasaran (RM)</th>
+                                    <th class="py-3 px-3 text-right">Terkumpul (RM)</th>
+                                    <th class="py-3 px-3 text-center">Progress</th>
+                                    <th class="py-3 px-3 text-center">Lead Priority</th>
+                                    <th class="py-3 px-3 text-center">Status</th>
+                                    <th class="py-3 px-3 text-right">Tindakan</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                <tr v-for="u in filteredAdminUsers" :key="u.id" class="hover:bg-slate-50/80 transition">
+                                    <td class="py-3 px-3">
+                                        <div class="font-bold text-slate-900">{{ u.name }}</div>
+                                        <div class="text-[10px] text-slate-400">{{ u.email }} • {{ u.phone }}</div>
+                                    </td>
+                                    <td class="py-3 px-3 font-medium">{{ u.state || '-' }}</td>
+                                    <td class="py-3 px-3 text-right font-semibold text-slate-800">RM {{ formatNumber(u.target_amount) }}</td>
+                                    <td class="py-3 px-3 text-right font-bold text-emerald-700">RM {{ formatNumber(u.totalSaved) }}</td>
+                                    <td class="py-3 px-3 text-center">
+                                        <div class="font-extrabold text-slate-900">{{ u.progress.toFixed(1) }}%</div>
+                                        <div class="w-16 h-1.5 bg-slate-200 rounded-full mx-auto overflow-hidden mt-0.5">
+                                            <div class="h-full bg-emerald-600 rounded-full" :style="{ width: u.progress + '%' }"></div>
+                                        </div>
+                                    </td>
+                                    <td class="py-3 px-3 text-center">
+                                        <!-- SECTION 17: AUTOMATIC LEAD PRIORITY -->
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold" :class="getPriorityBadgeClass(u.priority)">
+                                            {{ u.priority }}
+                                        </span>
+                                    </td>
+                                    <td class="py-3 px-3 text-center">
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-700 border">
+                                            {{ u.lead_status }}
+                                        </span>
+                                    </td>
+                                    <td class="py-3 px-3 text-right space-x-1">
+                                        <button @click="openAdminUserProfile(u)" class="bg-emerald-800 hover:bg-emerald-900 text-white px-2.5 py-1 rounded text-[11px] font-semibold transition">
+                                            Profil CRM
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr v-if="filteredAdminUsers.length === 0">
+                                    <td colspan="8" class="text-center py-6 text-slate-400">Tiada rekod pengguna dijumpai.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- SECTION 20: FOLLOW-UP CRM TIMELINE TAB -->
+                <div v-if="adminTab === 'followups'" class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                    <h3 class="text-lg font-bold text-slate-900">Rekod Aktiviti & Follow-Up Ejen</h3>
+                    <div class="space-y-3">
+                        <div v-for="f in allFollowups" :key="f.id" class="p-4 rounded-xl border border-slate-200 bg-slate-50/50 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+                            <div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="font-bold text-emerald-900 text-sm">{{ getUserName(f.user_id) }}</span>
+                                    <span class="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-semibold">{{ f.status }}</span>
+                                </div>
+                                <p class="text-xs text-slate-700 mt-1">"{{ f.note }}"</p>
+                                <span class="text-[10px] text-slate-400 mt-1 block">Tarikh: {{ f.created_at }} | Next Follow-Up: <strong>{{ f.next_followup || 'Tiada' }}</strong></span>
+                            </div>
+                            <button @click="openAdminUserProfileById(f.user_id)" class="bg-emerald-800 text-white text-xs font-semibold px-3 py-1.5 rounded-lg">
+                                Buka Profil User
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 28: ADMIN PACKAGE MANAGEMENT -->
+                <div v-if="adminTab === 'packages'" class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-lg font-bold text-slate-900">Pengurusan Pakej Umrah</h3>
+                        <button @click="openAddPackageModal" class="bg-emerald-800 text-white text-xs font-bold px-3 py-2 rounded-lg">
+                            + Tambah Pakej Baru
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div v-for="pkg in packages" :key="pkg.id" class="border rounded-xl p-4 bg-white flex flex-col justify-between">
+                            <div>
+                                <h4 class="font-bold text-emerald-900">{{ pkg.name }}</h4>
+                                <p class="text-lg font-extrabold text-gold-600">RM {{ formatNumber(pkg.price) }}</p>
+                                <p class="text-xs text-slate-600 my-2">{{ pkg.description }}</p>
+                            </div>
+                            <div class="flex space-x-2 mt-4 pt-3 border-t">
+                                <button @click="editPackage(pkg)" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold py-1.5 rounded">Edit</button>
+                                <button @click="deletePackage(pkg.id)" class="bg-red-50 hover:bg-red-100 text-red-600 text-xs font-semibold px-3 py-1.5 rounded">Padam</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 26 & 27: ADMIN ANALYTICS & LEAD FUNNEL -->
+                <div v-if="adminTab === 'analytics'" class="space-y-6">
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                        <h3 class="text-lg font-bold text-slate-900 mb-2">Visual Lead Conversion Funnel</h3>
+                        <p class="text-xs text-slate-500 mb-6">Perjalanan dari pendaftaran awal hingga tempahan pakej Umrah.</p>
+
+                        <div class="max-w-2xl mx-auto space-y-2">
+                            <div class="bg-emerald-950 text-white p-3 rounded-xl flex justify-between text-xs font-bold shadow">
+                                <span>1. Registered Users</span>
+                                <span>{{ funnelStats.registered }} Users (100%)</span>
+                            </div>
+                            <div class="bg-emerald-850 text-white p-3 rounded-xl flex justify-between text-xs font-bold shadow w-[90%] mx-auto">
+                                <span>2. Started Saving</span>
+                                <span>{{ funnelStats.startedSaving }} Users</span>
+                            </div>
+                            <div class="bg-emerald-700 text-white p-3 rounded-xl flex justify-between text-xs font-bold shadow w-[75%] mx-auto">
+                                <span>3. Reached 50% Target</span>
+                                <span>{{ funnelStats.reached50 }} Users</span>
+                            </div>
+                            <div class="bg-gold-600 text-emerald-950 p-3 rounded-xl flex justify-between text-xs font-bold shadow w-[55%] mx-auto">
+                                <span>4. Reached 80% (Hot Lead)</span>
+                                <span>{{ funnelStats.reached80 }} Users</span>
+                            </div>
+                            <div class="bg-gold-500 text-emerald-950 p-3 rounded-xl flex justify-between text-xs font-bold shadow w-[35%] mx-auto">
+                                <span>5. 100% Target Reached</span>
+                                <span>{{ funnelStats.reached100 }} Users</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 29: CONTENT MANAGEMENT -->
+                <div v-if="adminTab === 'content'" class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                    <h3 class="text-lg font-bold text-slate-900">Pengurusan Mesej Motivasi User</h3>
+                    <div class="space-y-3">
+                        <div class="p-4 border rounded-xl bg-slate-50">
+                            <h4 class="font-bold text-sm text-slate-900">{{ activeMotivation.title }}</h4>
+                            <p class="text-xs text-slate-600 mt-1">{{ activeMotivation.content }}</p>
+                            <span class="text-[10px] text-emerald-700 font-semibold mt-2 block">STATUS: PUBLISHED</span>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+
+    <!-- ========================================================================= -->
+    <!-- MODALS & DIALOGS -->
+    <!-- ========================================================================= -->
+
+    <!-- MODAL: REGISTER USER -->
+    <div v-if="showRegisterModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 sm:p-8 space-y-4 my-8">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="text-xl font-bold text-emerald-900">Daftar Akaun Tabung Umrah</h3>
+                <button @click="showRegisterModal = false" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+            </div>
+
+            <form @submit.prevent="handleRegister" class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Nama Penuh *</label>
+                    <input type="text" v-model="regForm.name" required class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-600 outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Email *</label>
+                        <input type="email" v-model="regForm.email" required class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-600 outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Nombor Telefon *</label>
+                        <input type="tel" v-model="regForm.phone" required placeholder="0123456789" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-600 outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Password *</label>
+                    <input type="password" v-model="regForm.password" required minlength="8" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-600 outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Pakej Sasaran</label>
+                        <select v-model="regForm.target_package_id" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-600 outline-none">
+                            <option v-for="pkg in packages" :key="pkg.id" :value="pkg.id">{{ pkg.name }} (RM{{ formatNumber(pkg.price) }})</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Sasaran Simpanan (RM)</label>
+                        <input type="number" v-model.number="regForm.target_amount" required class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-600 outline-none font-bold">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Kemampuan Bulanan (RM)</label>
+                        <input type="number" v-model.number="regForm.monthly_target" required class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-600 outline-none font-bold">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Negeri</label>
+                        <select v-model="regForm.state" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-600 outline-none">
+                            <option value="Selangor">Selangor</option>
+                            <option value="Kuala Lumpur">Kuala Lumpur</option>
+                            <option value="Johor">Johor</option>
+                            <option value="Penang">Penang</option>
+                            <option value="Kedah">Kedah</option>
+                            <option value="Kelantan">Kelantan</option>
+                            <option value="Terengganu">Terengganu</option>
+                            <option value="Perak">Perak</option>
+                            <option value="Pahang">Pahang</option>
+                            <option value="Sabah">Sabah</option>
+                            <option value="Sarawak">Sarawak</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="pt-2">
+                    <label class="flex items-center space-x-2">
+                        <input type="checkbox" required class="rounded text-emerald-600">
+                        <span class="text-[11px] text-slate-600">Saya bersetuju dengan Terma & Syarat serta Polisi Privasi, dan membenarkan data saya (nama, telefon, jumlah simpanan) dilihat oleh ejen untuk tujuan follow-up mengikut PDPA 2010.</span>
+                    </label>
+                </div>
+
+                <button type="submit" class="w-full bg-emerald-800 hover:bg-emerald-900 text-white font-bold py-3 rounded-xl shadow transition text-sm">
+                    Daftar & Mula Menabung
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: PROFILE -->
+    <div v-if="showProfileModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-3">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="text-lg font-bold text-emerald-900">Profil Saya</h3>
+                <button @click="showProfileModal = false" class="text-slate-400 text-lg">&times;</button>
+            </div>
+            <form @submit.prevent="saveProfile" class="space-y-3 text-xs">
+                <div><label class="block font-semibold text-slate-700 mb-1">Nama</label><input v-model="profileForm.name" required class="w-full p-2.5 border rounded-lg"></div>
+                <div><label class="block font-semibold text-slate-700 mb-1">Telefon</label><input v-model="profileForm.phone" required class="w-full p-2.5 border rounded-lg"></div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div><label class="block font-semibold text-slate-700 mb-1">Sasaran (RM)</label><input type="number" min="1" v-model.number="profileForm.target_amount" required class="w-full p-2.5 border rounded-lg"></div>
+                    <div><label class="block font-semibold text-slate-700 mb-1">Bulanan (RM)</label><input type="number" min="1" v-model.number="profileForm.monthly_target" required class="w-full p-2.5 border rounded-lg"></div>
+                </div>
+                <button type="submit" class="w-full bg-emerald-800 hover:bg-emerald-900 text-white font-bold py-2.5 rounded-xl text-sm">Simpan Profil</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: LOGIN -->
+    <div v-if="showLoginModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 space-y-4">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="text-lg font-bold text-emerald-900">Log Masuk Bakal Jemaah</h3>
+                <button @click="showLoginModal = false" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+            </div>
+
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Email</label>
+                    <input type="email" v-model="loginEmail" class="w-full p-2.5 border rounded-lg outline-none">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Password</label>
+                    <input type="password" v-model="loginPass" class="w-full p-2.5 border rounded-lg outline-none">
+                </div>
+                <button @click="handleLogin" class="w-full bg-emerald-800 hover:bg-emerald-900 text-white font-bold py-2.5 rounded-xl transition text-sm">
+                    Log Masuk
+                </button>
+                <button @click="resetPassword" class="w-full text-emerald-700 hover:underline text-xs pt-1">Lupa kata laluan?</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD / EDIT SAVINGS TRANSACTION -->
+    <div v-if="showSavingsModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="text-lg font-bold text-emerald-900">
+                    {{ isEditingSavings ? 'Kemaskini Rekod Simpanan' : '+ Rekod Simpanan Umrah' }}
+                </h3>
+                <button @click="showSavingsModal = false" class="text-slate-400 text-lg">&times;</button>
+            </div>
+
+            <form @submit.prevent="saveSavingsTransaction" class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Jumlah Simpanan (RM) *</label>
+                    <input type="number" v-model.number="savingsForm.amount" required placeholder="100" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-600 text-base font-bold text-emerald-900">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Tarikh *</label>
+                    <input type="date" v-model="savingsForm.date" required class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-600">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Jenis Simpanan *</label>
+                    <select v-model="savingsForm.type" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-600">
+                        <option value="Bulanan">Simpanan Bulanan</option>
+                        <option value="Mingguan">Simpanan Mingguan</option>
+                        <option value="Bonus">Bonus / Duit Lebih</option>
+                        <option value="Sampingan">Pendapatan Sampingan</option>
+                        <option value="Lain-lain">Lain-lain</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Nota (Optional)</label>
+                    <input type="text" v-model="savingsForm.note" placeholder="Contoh: Simpanan Gaji September" class="w-full p-2.5 border rounded-lg">
+                </div>
+
+                <button type="submit" class="w-full bg-gold-500 hover:bg-gold-600 text-emerald-950 font-bold py-3 rounded-xl shadow transition text-sm mt-2">
+                    Simpan Rekod Sekarang
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ADMIN USER CRM PROFILE & FOLLOW-UP -->
+    <div v-if="showAdminUserModal && selectedAdminUser" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 sm:p-8 space-y-6 my-8 max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <div class="flex justify-between items-start border-b pb-4">
+                <div>
+                    <div class="flex items-center space-x-2">
+                        <h3 class="text-xl font-bold text-slate-900">{{ selectedAdminUser.name }}</h3>
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold" :class="getPriorityBadgeClass(selectedAdminUser.priority)">
+                            {{ selectedAdminUser.priority }}
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-500">{{ selectedAdminUser.email }} • {{ selectedAdminUser.phone }} • Negeri: {{ selectedAdminUser.state }}</p>
+                </div>
+                <button @click="showAdminUserModal = false" class="text-slate-400 hover:text-slate-600 text-xl">&times;</button>
+            </div>
+
+            <!-- Stats grid -->
+            <div class="grid grid-cols-3 gap-3 text-center">
+                <div class="p-3 bg-slate-50 rounded-xl border">
+                    <span class="text-[10px] text-slate-500 block">Sasaran Pakej</span>
+                    <span class="text-xs font-bold text-slate-800">RM {{ formatNumber(selectedAdminUser.target_amount) }}</span>
+                </div>
+                <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-200">
+                    <span class="text-[10px] text-emerald-700 block">Jumlah Ditabung</span>
+                    <span class="text-xs font-bold text-emerald-900">RM {{ formatNumber(selectedAdminUser.totalSaved) }}</span>
+                </div>
+                <div class="p-3 bg-amber-50 rounded-xl border border-amber-200">
+                    <span class="text-[10px] text-amber-700 block">Progress</span>
+                    <span class="text-xs font-extrabold text-amber-900">{{ selectedAdminUser.progress.toFixed(1) }}%</span>
+                </div>
+            </div>
+
+            <!-- Lead status changer -->
+            <div class="flex items-center space-x-3 bg-slate-50 p-3 rounded-xl border text-xs">
+                <span class="font-bold text-slate-700">Tukar Status Lead:</span>
+                <select v-model="selectedAdminUser.lead_status" @change="updateUserLeadStatus(selectedAdminUser)" class="p-1.5 border rounded bg-white font-semibold">
+                    <option value="NEW">NEW</option>
+                    <option value="SAVING">SAVING</option>
+                    <option value="NEAR TARGET">NEAR TARGET</option>
+                    <option value="TARGET REACHED">TARGET REACHED</option>
+                    <option value="CONTACTED">CONTACTED</option>
+                    <option value="CONSULTATION">CONSULTATION</option>
+                    <option value="BOOKED">BOOKED</option>
+                </select>
+            </div>
+
+            <!-- SECTION 21: WHATSAPP GENERATOR -->
+            <div class="p-4 bg-emerald-900 text-white rounded-xl space-y-3">
+                <div class="flex justify-between items-center">
+                    <span class="font-bold text-xs text-gold-400 flex items-center">
+                        <i class="fa-brands fa-whatsapp text-lg mr-2 text-emerald-400"></i> Generator Mesej WhatsApp
+                    </span>
+                </div>
+                <p class="text-xs text-emerald-100 bg-emerald-950/60 p-3 rounded-lg leading-relaxed font-mono">
+                    "{{ generateWhatsAppMessage(selectedAdminUser) }}"
+                </p>
+                <button @click="openWhatsApp(selectedAdminUser)" class="w-full bg-emerald-500 hover:bg-emerald-600 text-emerald-950 font-bold py-2 rounded-lg text-xs shadow transition flex items-center justify-center space-x-2">
+                    <i class="fa-brands fa-whatsapp text-base"></i>
+                    <span>Hantar WhatsApp Kepada User</span>
+                </button>
+            </div>
+
+            <!-- SECTION 20: ADD FOLLOW-UP NOTE -->
+            <div class="border-t pt-4 space-y-3">
+                <h4 class="font-bold text-sm text-slate-900">Tambah Nota Follow-Up</h4>
+                <div class="space-y-2 text-xs">
+                    <textarea v-model="newFollowupNote" placeholder="Tulis catatan perbincangan bersama pelanggan..." class="w-full p-2.5 border rounded-lg h-20 outline-none"></textarea>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[10px] text-slate-500">Tarikh Follow-up Seterusnya</label>
+                            <input type="date" v-model="newFollowupNextDate" class="w-full p-2 border rounded">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-slate-500">Status</label>
+                            <select v-model="newFollowupStatus" class="w-full p-2 border rounded">
+                                <option value="Contacted">Contacted</option>
+                                <option value="Interested">Interested</option>
+                                <option value="Follow-up">Follow-up</option>
+                                <option value="Converted">Converted</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button @click="addFollowupNote" class="bg-emerald-800 text-white font-bold px-4 py-2 rounded-lg text-xs">
+                        Simpan Nota CRM
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import { getFirestore, collection, doc, setDoc, addDoc, updateDoc, deleteDoc, getDocs, onSnapshot, query, where } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCsUP3ZRsD4MljBuhLUTg2EjLpTuhe2guc",
+  authDomain: "tabung-umrah.firebaseapp.com",
+  projectId: "tabung-umrah",
+  storageBucket: "tabung-umrah.firebasestorage.app",
+  messagingSenderId: "285419286600",
+  appId: "1:285419286600:web:08e8e781dcb9805c04e87d"
+};
+const fbApp = initializeApp(firebaseConfig);
+const auth = getAuth(fbApp);
+const db = getFirestore(fbApp);
+
+// Tetapkan false apabila Firebase Auth siap (menyembunyikan bar demo & akses admin percuma)
+const DEMO_MODE = false;
+const todayStr = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+const daysSince = (s) => Math.floor((Date.now() - new Date(s + 'T00:00:00').getTime()) / 86400000);
+const waNumber = (p) => { let n = String(p || '').replace(/\D/g, ''); if (n.startsWith('0')) n = '60' + n.slice(1); return n; };
+const csvCell = (v) => { let s = String(v ?? ''); if (/^[=+\-@\t\r]/.test(s)) s = "'" + s; return '"' + s.replace(/"/g, '""') + '"'; };
+const { createApp } = Vue;
+
+createApp({
+    data() {
+        return {
+            currentRole: 'landing', // 'landing', 'user', 'admin'
+            adminTab: 'dashboard',
+            userNav: 'home',
+
+            // Calculator Landing State
+            landingCalc: {
+                target: 12000,
+                current: 2000,
+                monthly: 500
+            },
+
+            // Modals Visibility
+            showRegisterModal: false,
+            showLoginModal: false,
+            showSavingsModal: false,
+            showAdminUserModal: false,
+            showUserNotifs: false,
+            showProfileModal: false,
+            profileForm: {},
+            demoMode: DEMO_MODE,
+            busy: false,
+            unsubs: [],
+
+            // Auth State
+            loginEmail: '',
+            loginPass: '',
+            activeUserId: 1,
+
+            // Registration Form
+            regForm: {
+                name: '',
+                email: '',
+                phone: '',
+                password: '',
+                target_package_id: '2',
+                target_amount: 10999,
+                monthly_target: 500,
+                state: 'Selangor'
+            },
+
+            // Savings Transaction Form
+            isEditingSavings: false,
+            editingSavingsId: null,
+            savingsForm: {
+                amount: null,
+                date: todayStr(),
+                type: 'Bulanan',
+                note: ''
+            },
+
+            // Admin CRM State
+            adminSearchQuery: '',
+            adminPriorityFilter: 'ALL',
+            adminStatusFilter: 'ALL',
+            selectedAdminUser: null,
+            newFollowupNote: '',
+            newFollowupNextDate: '',
+            newFollowupStatus: 'Contacted',
+
+            // Seed Data / Database
+            packages: [
+                {
+                    id: '1',
+                    name: 'Pakej Ekonomi An-Nur',
+                    price: 8999,
+                    duration: '12 Hari 10 Malam',
+                    hotel_makkah: 'Hotel Rawdah (600m)',
+                    hotel_madinah: 'Hotel Harmony (300m)',
+                    description: 'Pilihan mesra bajet dengan fasiliti selesa khas untuk jemaah keluarga.',
+                    image: 'https://images.unsplash.com/photo-1591604466107-ec97de577aff?auto=format&fit=crop&w=600&q=80'
+                },
+                {
+                    id: '2',
+                    name: 'Pakej Standard Safawa',
+                    price: 10999,
+                    duration: '12 Hari 10 Malam',
+                    hotel_makkah: 'Clock Tower Hotel (200m)',
+                    hotel_madinah: 'Pullman Zamzam (150m)',
+                    description: 'Pakej paling popular pilihan majoriti jemaah Malaysia dengan lokasi hotel sangat hampir.',
+                    image: 'https://images.unsplash.com/photo-1565552070098-01208035c71c?auto=format&fit=crop&w=600&q=80'
+                },
+                {
+                    id: '3',
+                    name: 'Pakej Premium VIP Firdaus',
+                    price: 13999,
+                    duration: '14 Hari 12 Malam',
+                    hotel_makkah: 'Fairmont Makkah (Front Row)',
+                    hotel_madinah: 'Oberoi Madinah (Front Row)',
+                    description: 'Perkhidmatan eksklusif 5-bintang dengan bimbingan mutawwif peribadi.',
+                    image: 'https://images.unsplash.com/photo-1519817650390-64a93db51149?auto=format&fit=crop&w=600&q=80'
+                }
+            ],
+
+            allUsers: [],
+            allSavings: [],
+            allFollowups: [],
+            allNotifs: [],
+            
+            activeMotivation: {
+                title: 'Jangan Tunggu Kaya Untuk Mula Bermimpi',
+                content: 'Ramai orang menangguhkan impian kerana merasakan mereka belum mampu hari ini. Tetapi perancangan bermula dengan niat yang jelas dan tindakan kecil yang berterusan. Insya-Allah pintu Rezeki akan terbuka.'
+            }
+        };
+    },
+
+    computed: {
+        // Landing Calc
+        landingCalcMonths() {
+            const rem = Math.max(0, this.landingCalc.target - this.landingCalc.current);
+            if (!this.landingCalc.monthly || this.landingCalc.monthly <= 0) return 0;
+            return Math.ceil(rem / this.landingCalc.monthly);
+        },
+        landingCalcTargetDate() {
+            const m = this.landingCalcMonths;
+            const d = new Date();
+            d.setMonth(d.getMonth() + m);
+            return d.toLocaleDateString('ms-MY', { month: 'long', year: 'numeric' });
+        },
+
+        // Active User Computed
+        activeUser() {
+            return this.allUsers.find(u => u.id === this.activeUserId) || { name: '' };
+        },
+
+        userTargetPackageName() {
+            const p = this.packages.find(pkg => pkg.id === this.activeUser.target_package_id);
+            return p ? p.name : 'Pakej Umrah Pilihan';
+        },
+
+        userSavingsHistory() {
+            return this.allSavings.filter(s => s.user_id === this.activeUserId).sort((a,b) => new Date(b.date) - new Date(a.date));
+        },
+
+        userTotalSaved() {
+            return this.userSavingsHistory.reduce((sum, item) => sum + item.amount, 0);
+        },
+
+        userRemainingAmount() {
+            return Math.max(0, (this.activeUser.target_amount || 0) - this.userTotalSaved);
+        },
+
+        userProgress() {
+            if (!this.activeUser.target_amount) return 0;
+            return Math.min(100, (this.userTotalSaved / this.activeUser.target_amount) * 100);
+        },
+
+        // Monthly Saved
+        userCurrentMonthSaved() {
+            const ym = todayStr().slice(0, 7);
+            return this.userSavingsHistory
+                .filter(s => (s.date || '').slice(0, 7) === ym)
+                .reduce((sum, item) => sum + item.amount, 0);
+        },
+
+        userMonthlyRemaining() {
+            return Math.max(0, (this.activeUser.monthly_target || 0) - this.userCurrentMonthSaved);
+        },
+
+        userMonthlyProgress() {
+            if (!this.activeUser.monthly_target) return 0;
+            return Math.min(100, (this.userCurrentMonthSaved / this.activeUser.monthly_target) * 100);
+        },
+
+        userCalcMonthsRemaining() {
+            if (!this.activeUser.monthly_target || this.activeUser.monthly_target <= 0) return 0;
+            return Math.ceil(this.userRemainingAmount / this.activeUser.monthly_target);
+        },
+
+        userCalcEstimatedDate() {
+            const m = this.userCalcMonthsRemaining;
+            const d = new Date();
+            d.setMonth(d.getMonth() + m);
+            return d.toLocaleDateString('ms-MY', { month: 'long', year: 'numeric' });
+        },
+
+        // Milestones
+        allMilestones() {
+            return [
+                { phase: 'FASA 1', icon: '🌱', title: 'Saya Sudah Bermula', minProgress: 0, maxProgress: 10, description: 'Tahniah! Niat pertama anda telah diterjemahkan kepada langkah awal.' },
+                { phase: 'FASA 2', icon: '🌿', title: 'Saya Sedang Berusaha', minProgress: 11, maxProgress: 30, description: 'Disiplin mula terbina. Simpanan berkala semakin konsisten.' },
+                { phase: 'FASA 3', icon: '🌙', title: 'Impian Semakin Dekat', minProgress: 31, maxProgress: 50, description: 'Hampir separuh perjalanan! Keyakinan diri semakin kukuh.' },
+                { phase: 'FASA 4', icon: '🕋', title: 'Sudah Hampir', minProgress: 51, maxProgress: 75, description: 'Melintasi garisan separuh. Persediaan mental & rohani boleh dimulakan.' },
+                { phase: 'FASA 5', icon: '✨', title: 'Tanah Suci Semakin Dekat', minProgress: 76, maxProgress: 99, description: 'Hampir 100%! Baki simpanan sudah dalam jangkauan.' },
+                { phase: 'FASA 6', icon: '🕋', title: 'Saya Sudah Bersedia', minProgress: 100, maxProgress: 100, description: 'Alhamdulillah! Sasaran penuh dicapai. Masa untuk booking perjalanan.' }
+            ];
+        },
+
+        currentMilestone() {
+            const prog = this.userProgress;
+            return [...this.allMilestones].reverse().find(m => prog >= m.minProgress) || this.allMilestones[0];
+        },
+
+        currentUserNotifs() {
+            return this.allNotifs.filter(n => n.user_id === this.activeUserId);
+        },
+
+        unreadUserNotifsCount() {
+            return this.currentUserNotifs.filter(n => !n.is_read).length;
+        },
+
+        // ADMIN COMPUTEDS
+        enhancedUsersList() {
+            return this.allUsers.map(u => {
+                const userSavings = this.allSavings.filter(s => s.user_id === u.id);
+                const totalSaved = userSavings.reduce((sum, item) => sum + item.amount, 0);
+                const progress = u.target_amount ? Math.min(100, (totalSaved / u.target_amount) * 100) : 0;
+                
+                // Priority calculation
+                let priority = 'EARLY';
+                if (progress >= 90) priority = 'HOT';
+                else if (progress >= 70) priority = 'WARM';
+                else if (progress >= 40) priority = 'DEVELOPING';
+
+                // Last activity date
+                const sortedS = userSavings.sort((a,b) => new Date(b.date) - new Date(a.date));
+                const lastUpdate = sortedS.length > 0 ? sortedS[0].date : u.created_at;
+
+                return {
+                    ...u,
+                    totalSaved,
+                    progress,
+                    priority,
+                    lastUpdate
+                };
+            });
+        },
+
+        filteredAdminUsers() {
+            return this.enhancedUsersList.filter(u => {
+                const matchesQuery = u.name.toLowerCase().includes(this.adminSearchQuery.toLowerCase()) ||
+                                     u.email.toLowerCase().includes(this.adminSearchQuery.toLowerCase()) ||
+                                     u.phone.includes(this.adminSearchQuery);
+                const matchesPriority = this.adminPriorityFilter === 'ALL' || u.priority === this.adminPriorityFilter;
+                const matchesStatus = this.adminStatusFilter === 'ALL' || u.lead_status === this.adminStatusFilter;
+
+                return matchesQuery && matchesPriority && matchesStatus;
+            });
+        },
+
+        adminKpi() {
+            const totalUsers = this.allUsers.length;
+            const activeSavers = this.enhancedUsersList.filter(u => u.totalSaved > 0).length;
+            const nearTarget = this.enhancedUsersList.filter(u => u.progress >= 80 && u.progress < 100).length;
+            const targetReached = this.enhancedUsersList.filter(u => u.progress >= 100).length;
+            const totalSavings = this.allSavings.reduce((sum, item) => sum + item.amount, 0);
+            
+            return {
+                totalUsers,
+                activeSavers,
+                nearTarget,
+                targetReached,
+                totalSavings,
+                newUsersMonth: this.allUsers.filter(u => (u.created_at || '').slice(0, 7) === todayStr().slice(0, 7)).length
+            };
+        },
+
+        hotLeadsAlerts() {
+            return this.enhancedUsersList.filter(u => u.progress >= 80).slice(0, 3);
+        },
+
+        inactiveAlerts() {
+            return this.enhancedUsersList.filter(u => u.totalSaved > 0 && u.progress < 100 && daysSince(u.lastUpdate) >= 30).slice(0, 5);
+        },
+
+        funnelStats() {
+            const total = this.allUsers.length;
+            const started = this.enhancedUsersList.filter(u => u.totalSaved > 0).length;
+            const r50 = this.enhancedUsersList.filter(u => u.progress >= 50).length;
+            const r80 = this.enhancedUsersList.filter(u => u.progress >= 80).length;
+            const r100 = this.enhancedUsersList.filter(u => u.progress >= 100).length;
+
+            return {
+                registered: total,
+                startedSaving: started,
+                reached50: r50,
+                reached80: r80,
+                reached100: r100
+            };
+        }
+    },
+
+    mounted() {
+        this.init();
+    },
+
+    methods: {
+        init() {
+            onSnapshot(collection(db, 'packages'), s => {
+                if (!s.empty) this.packages = s.docs.map(d => ({ ...d.data(), id: d.id })).sort((a, b) => a.price - b.price);
+            }, () => {});
+            onAuthStateChanged(auth, u => {
+                this.cleanup();
+                if (!u) { this.activeUserId = null; this.currentRole = 'landing'; return; }
+                this.activeUserId = u.uid;
+                let started = false;
+                this.unsubs.push(onSnapshot(doc(db, 'users', u.uid), snap => {
+                    if (!snap.exists()) return;
+                    const me = { ...snap.data(), id: snap.id };
+                    if (!started) { started = true; this.startRole(me); }
+                    if (me.role !== 'admin') this.allUsers = [me];
+                }, e => this.fail(e)));
+            });
+        },
+        cleanup() { this.unsubs.forEach(f => f()); this.unsubs = []; this.allUsers = []; this.allSavings = []; this.allFollowups = []; },
+        startRole(me) {
+            const err = e => this.fail(e);
+            const list = s => s.docs.map(d => ({ ...d.data(), id: d.id }));
+            if (me.role === 'admin') {
+                this.currentRole = 'admin';
+                this.unsubs.push(onSnapshot(collection(db, 'users'), s => { this.allUsers = list(s).filter(u => u.role !== 'admin'); }, err));
+                this.unsubs.push(onSnapshot(collection(db, 'savings'), s => { this.allSavings = list(s); }, err));
+                this.unsubs.push(onSnapshot(collection(db, 'followups'), s => { this.allFollowups = list(s).sort((a, b) => (b.created_at || '').localeCompare(a.created_at || '')); }, err));
+                getDocs(collection(db, 'packages')).then(s => { if (s.empty) this.packages.forEach(p => setDoc(doc(db, 'packages', String(p.id)), p)); }).catch(() => {});
+            } else {
+                this.currentRole = 'user';
+                this.unsubs.push(onSnapshot(query(collection(db, 'savings'), where('user_id', '==', me.id)), s => { this.allSavings = list(s); this.syncLeadStatus(); }, err));
+            }
+        },
+        fail(e) {
+            console.error(e);
+            const m = { 'auth/invalid-credential': 'Email atau kata laluan salah.', 'auth/email-already-in-use': 'Email ini sudah berdaftar.', 'auth/weak-password': 'Kata laluan terlalu lemah (minimum 8 aksara).', 'auth/too-many-requests': 'Terlalu banyak cubaan. Cuba sebentar lagi.', 'permission-denied': 'Anda tiada kebenaran untuk tindakan ini.' };
+            alert(m[e.code] || 'Ralat: ' + (e.code || e.message));
+        },
+
+        saveKey(k, v) { localStorage.setItem(k, JSON.stringify(v)); },
+
+        syncLeadStatus() {
+            const u = this.activeUser;
+            if (!u.id || !['NEW', 'SAVING', 'NEAR TARGET', 'TARGET REACHED'].includes(u.lead_status)) return;
+            const p = this.userProgress;
+            const s = p >= 100 ? 'TARGET REACHED' : p >= 80 ? 'NEAR TARGET' : p > 0 ? 'SAVING' : 'NEW';
+            if (s !== u.lead_status) { u.lead_status = s; this.saveUsersToStorage(); }
+        },
+
+        saveUsersToStorage() {
+            const u = this.activeUser;
+            if (!u.id) return;
+            const { id, ...d } = u;
+            updateDoc(doc(db, 'users', id), JSON.parse(JSON.stringify(d))).catch(e => this.fail(e));
+        },
+        saveSavingsToStorage() {
+            localStorage.setItem('tu_savings', JSON.stringify(this.allSavings));
+        },
+
+        switchRole(role) {
+            if (role === 'user' && !this.allUsers.some(u => u.id === this.activeUserId)) this.activeUserId = this.allUsers[0]?.id ?? null;
+            this.currentRole = role;
+        },
+
+        logout() { this.showUserNotifs = false; signOut(auth); },
+
+        formatNumber(num) {
+            if (!num && num !== 0) return '0';
+            return num.toLocaleString('ms-MY');
+        },
+        formatDate(dateStr) {
+            if (!dateStr) return '-';
+            const d = new Date(dateStr);
+            return d.toLocaleDateString('ms-MY', { day: '2-digit', month: 'short', year: 'numeric' });
+        },
+
+        onImgError(e) {
+            e.target.onerror = null; e.target.src = 'https://placehold.co/600x400/064e3b/ffffff?text=Pakej+Umrah';
+        },
+
+        openRegisterModal() {
+            this.showRegisterModal = true;
+        },
+        openLoginModal() {
+            this.showLoginModal = true;
+        },
+
+        applyLandingCalcAndRegister() {
+            this.regForm.target_amount = this.landingCalc.target;
+            this.regForm.monthly_target = this.landingCalc.monthly;
+            this.openRegisterModal();
+        },
+
+        selectPackageToRegister(pkg) {
+            this.regForm.target_package_id = pkg.id;
+            this.regForm.target_amount = pkg.price;
+            this.openRegisterModal();
+        },
+
+        async handleRegister() {
+            const f = this.regForm;
+            if (!(f.target_amount > 0) || !(f.monthly_target > 0)) { alert('Sasaran dan kemampuan bulanan mesti lebih daripada 0.'); return; }
+            if (this.busy) return;
+            this.busy = true;
+            try {
+                const cred = await createUserWithEmailAndPassword(auth, f.email.trim(), f.password);
+                const d = new Date(); d.setMonth(d.getMonth() + Math.ceil(f.target_amount / f.monthly_target));
+                await setDoc(doc(db, 'users', cred.user.uid), {
+                    name: f.name.trim(), email: f.email.trim().toLowerCase(), phone: f.phone.trim(), state: f.state,
+                    target_package_id: String(f.target_package_id), target_amount: f.target_amount, monthly_target: f.monthly_target,
+                    target_date: d.toLocaleDateString('ms-MY', { month: 'long', year: 'numeric' }),
+                    lead_status: 'NEW', role: 'user', consent_at: new Date().toISOString(), created_at: todayStr()
+                });
+                this.showRegisterModal = false; this.regForm.password = '';
+            } catch (e) { this.fail(e); } finally { this.busy = false; }
+        },
+
+        async handleLogin() {
+            if (this.busy) return;
+            this.busy = true;
+            try {
+                await signInWithEmailAndPassword(auth, this.loginEmail.trim(), this.loginPass);
+                this.showLoginModal = false; this.loginPass = '';
+            } catch (e) { this.fail(e); } finally { this.busy = false; }
+        },
+        async resetPassword() {
+            if (!this.loginEmail.trim()) { alert('Sila isi email dahulu.'); return; }
+            try { await sendPasswordResetEmail(auth, this.loginEmail.trim()); } catch (e) { console.error(e); }
+            alert('Jika email ini berdaftar, pautan tetapan semula kata laluan telah dihantar.');
+        },
+
+        openAddSavingsModal() {
+            this.isEditingSavings = false;
+            this.savingsForm = {
+                amount: null,
+                date: todayStr(),
+                type: 'Bulanan',
+                note: ''
+            };
+            this.showSavingsModal = true;
+        },
+
+        editTransaction(t) {
+            this.isEditingSavings = true;
+            this.editingSavingsId = t.id;
+            this.savingsForm = {
+                amount: t.amount,
+                date: t.date,
+                type: t.type,
+                note: t.note
+            };
+            this.showSavingsModal = true;
+        },
+
+        async saveSavingsTransaction() {
+            const f = this.savingsForm;
+            if (!(f.amount > 0)) return;
+            const d = { amount: f.amount, date: f.date, type: f.type, note: f.note || '' };
+            try {
+                if (this.isEditingSavings) await updateDoc(doc(db, 'savings', this.editingSavingsId), d);
+                else await addDoc(collection(db, 'savings'), { ...d, user_id: this.activeUserId, created_at: new Date().toISOString() });
+                this.showSavingsModal = false;
+            } catch (e) { this.fail(e); }
+        },
+
+        confirmDeleteTransaction(id) {
+            if (confirm('Adakah anda pasti untuk memadam rekod simpanan ini?')) deleteDoc(doc(db, 'savings', id)).catch(e => this.fail(e));
+        },
+
+        setUserTargetPackage(pkg) {
+            this.activeUser.target_package_id = pkg.id;
+            this.activeUser.target_amount = pkg.price;
+            this.saveUsersToStorage();
+        },
+
+        markNotifsRead() {
+            this.currentUserNotifs.forEach(n => n.is_read = true);
+            this.saveKey('tu_notifs', this.allNotifs);
+        },
+
+        triggerReadyCTA() {
+            if (!confirm('Kongsi nama, nombor telefon dan jumlah simpanan anda dengan ejen untuk sesi konsultasi?')) return;
+            this.activeUser.lead_status = 'CONSULTATION';
+            this.activeUser.contact_requested_at = new Date().toISOString();
+            this.saveUsersToStorage();
+            alert('Permintaan anda telah direkodkan. Ejen akan menghubungi anda.');
+        },
+
+        openProfileModal() {
+            this.profileForm = { name: this.activeUser.name, phone: this.activeUser.phone, target_amount: this.activeUser.target_amount, monthly_target: this.activeUser.monthly_target };
+            this.showProfileModal = true;
+        },
+
+        saveProfile() {
+            const f = this.profileForm;
+            if (!(f.target_amount > 0) || !(f.monthly_target > 0)) { alert('Jumlah mesti lebih daripada 0.'); return; }
+            Object.assign(this.activeUser, { name: f.name.trim(), phone: f.phone.trim(), target_amount: f.target_amount, monthly_target: f.monthly_target });
+            this.saveUsersToStorage();
+            this.syncLeadStatus();
+            this.showProfileModal = false;
+        },
+
+        // ADMIN METHODS
+        getPriorityBadgeClass(priority) {
+            switch (priority) {
+                case 'HOT': return 'bg-red-100 text-red-800 border border-red-300';
+                case 'WARM': return 'bg-amber-100 text-amber-800 border border-amber-300';
+                case 'DEVELOPING': return 'bg-yellow-100 text-yellow-800 border border-yellow-300';
+                default: return 'bg-blue-100 text-blue-800 border border-blue-300';
+            }
+        },
+
+        openAdminUserProfile(u) {
+            this.selectedAdminUser = u;
+            this.showAdminUserModal = true;
+        },
+
+        openAdminUserProfileById(userId) {
+            const u = this.enhancedUsersList.find(x => x.id === userId);
+            if (u) this.openAdminUserProfile(u);
+        },
+
+        updateUserLeadStatus(u) {
+            updateDoc(doc(db, 'users', u.id), { lead_status: u.lead_status }).catch(e => this.fail(e));
+        },
+
+        getUserName(userId) {
+            const u = this.allUsers.find(x => x.id === userId);
+            return u ? u.name : 'User #' + userId;
+        },
+
+        generateWhatsAppMessage(u) {
+            return `Assalamualaikum ${u.name}. Saya daripada team Ejen Tabung Umrah. Saya mendapati simpanan Umrah anda kini telah mencapai ${u.progress.toFixed(1)}%. Alhamdulillah! Jika anda bersedia, kami boleh bantu semak pakej perlepasan yang sesuai.`;
+        },
+
+        openWhatsApp(u) {
+            const msg = encodeURIComponent(this.generateWhatsAppMessage(u));
+            const url = `https://wa.me/${waNumber(u.phone)}?text=${msg}`;
+            window.open(url, '_blank');
+        },
+
+        async addFollowupNote() {
+            if (!this.newFollowupNote.trim()) return;
+            try {
+                await addDoc(collection(db, 'followups'), { user_id: this.selectedAdminUser.id, admin_id: auth.currentUser.uid, note: this.newFollowupNote.trim(), status: this.newFollowupStatus, next_followup: this.newFollowupNextDate, created_at: todayStr() });
+                this.newFollowupNote = '';
+                alert('Nota Follow-Up telah disimpan!');
+            } catch (e) { this.fail(e); }
+        },
+
+        exportUsersCSV() {
+            let csv = 'Nama,Email,Phone,Negeri,Target_RM,Saved_RM,Progress_Pct,Priority,Status\n';
+            this.enhancedUsersList.forEach(u => {
+                csv += [u.name, u.email, u.phone, u.state, u.target_amount, u.totalSaved, u.progress.toFixed(1), u.priority, u.lead_status].map(csvCell).join(',') + '\n';
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('href', url);
+            a.setAttribute('download', `Tabung_Umrah_Leads_${new Date().toISOString().substr(0,10)}.csv`);
+            a.click();
+        },
+
+        openAddPackageModal() {
+            this.editPackage({ id: null, name: '', price: '', description: '', duration: '12 Hari 10 Malam', hotel_makkah: '-', hotel_madinah: '-', image: 'https://placehold.co/600x400/064e3b/ffffff?text=Pakej+Umrah' });
+        },
+        async editPackage(pkg) {
+            const name = prompt('Nama pakej:', pkg.name);
+            if (name === null || !name.trim()) return;
+            const price = Number(prompt('Harga (RM):', pkg.price));
+            if (!(price > 0)) { alert('Harga tidak sah.'); return; }
+            const description = prompt('Keterangan:', pkg.description);
+            if (description === null) return;
+            const id = pkg.id === null ? String(Date.now()) : String(pkg.id);
+            try { await setDoc(doc(db, 'packages', id), { ...pkg, id, name: name.trim(), price, description }); } catch (e) { this.fail(e); }
+        },
+        deletePackage(id) {
+            if (this.allUsers.some(u => u.target_package_id === id)) { alert('Pakej ini masih dipilih oleh pengguna. Tidak boleh dipadam.'); return; }
+            if (confirm('Padam pakej ini?')) deleteDoc(doc(db, 'packages', String(id))).then(() => { this.packages = this.packages.filter(p => p.id !== id); }).catch(e => this.fail(e));
+        },
+    }
+}).mount('#app');
+</script>
+</body>
+</html>
